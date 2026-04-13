@@ -5,23 +5,31 @@ import {
   getTrustScore,
   getFraudLog,
 } from '../controllers/transactionController.js';
+import { authenticate } from '../middleware/auth.js';
+import { transactionRateLimiter } from '../middleware/rateLimiter.js';
+import { validate } from '../middleware/validate.js';
+import { submitTransactionSchema } from '../validators/transactionSchemas.js';
 
 const router = express.Router();
 
-/**
- * Transaction Routes
- */
+// All transaction routes require a valid JWT
+router.use(authenticate);
 
-// POST: Submit new transaction for fraud detection
-router.post('/', submitTransaction);
+// POST /api/transactions — submit for fraud detection
+router.post(
+  '/',
+  transactionRateLimiter,
+  validate(submitTransactionSchema),
+  submitTransaction
+);
 
-// GET: Retrieve user transactions
+// GET /api/transactions/user/:userId
 router.get('/user/:userId', getUserTransactions);
 
-// GET: Get user trust score and insights
+// GET /api/transactions/trust-score/:userId
 router.get('/trust-score/:userId', getTrustScore);
 
-// GET: Get detailed fraud analysis for a transaction
+// GET /api/transactions/fraud-log/:transactionId
 router.get('/fraud-log/:transactionId', getFraudLog);
 
 export default router;

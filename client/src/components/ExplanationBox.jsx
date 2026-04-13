@@ -28,29 +28,29 @@ const ExplanationBox = ({ transaction = null, loading = false }) => {
 
   return (
     <div className="clay-card">
-      <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+      <h3 className="text-base font-bold text-gray-100 mb-4 flex items-center gap-2">
         <Lightbulb className="w-5 h-5 text-yellow-500" />
         Why This Decision?
       </h3>
 
       {/* Transaction Summary */}
-      <div className="bg-gray-50 rounded-2xl p-4 mb-6 border border-gray-200">
+      <div className="bg-white/5 rounded-xl p-4 mb-5 border border-white/8">
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div>
-            <p className="text-gray-600 text-xs uppercase">Amount</p>
-            <p className="font-bold text-gray-800">${transaction.amount.toFixed(2)}</p>
+            <p className="text-gray-500 text-xs uppercase font-mono">Amount</p>
+            <p className="font-bold text-gray-200 font-mono">₹{transaction.amount.toFixed(2)}</p>
           </div>
           <div>
-            <p className="text-gray-600 text-xs uppercase">Location</p>
-            <p className="font-bold text-gray-800">{transaction.location}</p>
+            <p className="text-gray-500 text-xs uppercase font-mono">Location</p>
+            <p className="font-bold text-gray-200 font-mono">{transaction.location}</p>
           </div>
           <div>
-            <p className="text-gray-600 text-xs uppercase">Category</p>
+            <p className="text-gray-500 text-xs uppercase font-mono">Category</p>
             <p className="font-bold text-gray-800 capitalize">{transaction.category}</p>
           </div>
           <div>
-            <p className="text-gray-600 text-xs uppercase">Status</p>
-            <p className="font-bold text-gray-800">
+            <p className="text-gray-500 text-xs uppercase font-mono">Status</p>
+            <p className="font-bold text-gray-200 font-mono">
               {transaction.isFlagged ? '🚨 Flagged' : '✅ Approved'}
             </p>
           </div>
@@ -59,7 +59,7 @@ const ExplanationBox = ({ transaction = null, loading = false }) => {
 
       {/* Key Findings */}
       <div className="mb-6">
-        <h4 className="font-semibold text-gray-800 mb-3">🔍 Key Findings:</h4>
+        <h4 className="font-semibold text-gray-300 mb-3 text-sm">🔍 Key Findings</h4>
         <div className="space-y-2">
           {transaction.explanations?.length > 0 ? (
             transaction.explanations.map((explanation, idx) => (
@@ -67,28 +67,28 @@ const ExplanationBox = ({ transaction = null, loading = false }) => {
                 <span className="text-lg flex-shrink-0">
                   {explanation.includes('High') ? '📈' : explanation.includes('Location') ? '📍' : explanation.includes('Time') ? '⏰' : explanation.includes('Device') ? '📱' : '⚡'}
                 </span>
-                <p className="text-gray-700">{explanation}</p>
+                <p className="text-gray-400 text-sm">{explanation}</p>
               </div>
             ))
           ) : (
-            <p className="text-gray-600 text-sm">✅ No suspicious patterns detected</p>
+            <p className="text-gray-500 text-sm">✅ No suspicious patterns detected</p>
           )}
         </div>
       </div>
 
       {/* AI Confidence */}
-      <div className="border-t pt-4">
-        <p className="text-xs text-gray-600 uppercase font-semibold mb-3">AI Confidence Levels:</p>
+      <div className="border-t border-white/5 pt-4">
+        <p className="text-xs text-gray-500 uppercase font-semibold font-mono mb-3">AI Confidence Levels</p>
         <div className="space-y-2 text-sm">
           <div className="flex justify-between items-center">
-            <span className="text-gray-700">Amount Analysis</span>
-            <span className="font-mono text-xs text-gray-600">
+            <span className="text-gray-400 text-sm">Amount Analysis</span>
+            <span className="font-mono text-xs text-gray-500">
               {(transaction.fraudScore * 100 * 0.3).toFixed(0)}%
             </span>
           </div>
           <div className="flex justify-between items-center">
-            <span className="text-gray-700">Fraud Risk Score</span>
-            <span className="font-mono font-bold text-gray-800">
+            <span className="text-gray-400 text-sm">Fraud Risk Score</span>
+            <span className="font-mono font-bold text-gray-200">
               {(transaction.fraudScore * 100).toFixed(1)}%
             </span>
           </div>
@@ -96,9 +96,9 @@ const ExplanationBox = ({ transaction = null, loading = false }) => {
       </div>
 
       {/* Recommendation */}
-      <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
-        <p className="text-xs text-blue-800 font-semibold">💡 Recommendation:</p>
-        <p className="text-sm text-blue-900 mt-1">
+      <div className="mt-4 p-3 bg-blue-500/10 rounded-xl border border-blue-500/20">
+        <p className="text-xs text-blue-400 font-semibold">💡 Recommendation</p>
+        <p className="text-xs text-blue-300/70 mt-1">
           {transaction.isFlagged
             ? 'Please verify this transaction with your bank. You may be asked to confirm your identity.'
             : 'Transaction verified and approved. Continue with your banking activities.'}

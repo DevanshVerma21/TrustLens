@@ -9,36 +9,90 @@ const fraudService = new FraudService(User, Transaction);
 const explainabilityService = new ExplainabilityService();
 const trustScoreService = new TrustScoreService(User, Transaction);
 
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+/**
+ * Update device record for the user with enhanced tracking.
+ * Tracks usage count, locations used from, and first/last seen times.
+ */
+function updateDeviceRecord(user, { deviceId, deviceName, location }) {
+  const existing = user.devices.find((d) => d.deviceId === deviceId);
+
+  if (existing) {
+    existing.lastUsed = new Date();
+    existing.useCount = (existing.useCount || 0) + 1;
+    // Track unique locations for this device
+    if (!existing.locations) existing.locations = [];
+    if (!existing.locations.includes(location)) {
+      existing.locations.push(location);
+    }
+  } else {
+    user.devices.push({
+      deviceId,
+      name: deviceName || 'Unknown Device',
+      firstSeen: new Date(),
+      lastUsed: new Date(),
+      useCount: 1,
+      locations: [location],
+      isTrusted: false,
+      isBlocked: false,
+    });
+  }
+}
+
+/**
+ * Update location history for the user.
+ */
+function updateLocationRecord(user, location) {
+  const existing = user.locationHistory.find(
+    (loc) => loc.location.toLowerCase() === location.toLowerCase()
+  );
+
+  if (existing) {
+    existing.lastUsed = new Date();
+    existing.count = (existing.count || 0) + 1;
+  } else {
+    user.locationHistory.push({ location, lastUsed: new Date(), count: 1 });
+  }
+}
+
+// ── Controllers ───────────────────────────────────────────────────────────────
+
 /**
  * POST /api/transactions
- * Submit a new transaction for fraud detection and analysis
+ * Submit a new transaction for fraud detection and analysis.
+ * userId now comes from the authenticated JWT (req.user.id).
  */
 export const submitTransaction = async (req, res) => {
   try {
-    const { userId, amount, location, deviceId, deviceName, category } = req.body;
+    // ── Identity from JWT, not body ─────────────────────────────────────────
+    const userId = req.user.id;
+    const { amount, location, deviceId, deviceName, category, currency = 'USD' } = req.body;
 
-    // Validate input
-    if (!userId || !amount || !location || !deviceId) {
-      return res.status(400).json({ error: 'Missing required fields' });
-    }
-
-    // Check if user exists
     const user = await User.findById(userId);
     if (!user) {
-      return res.status(404).json({ error: 'User not found' });
+      return res.status(404).json({ error: 'NotFound', message: 'User not found' });
     }
 
-    // Get recent transactions for context
+    if (user.accountStatus === 'suspended') {
+      return res.status(403).json({
+        error: 'Forbidden',
+        message: 'Your account has been suspended. Please contact support.',
+      });
+    }
+
+    // ── Historical context ──────────────────────────────────────────────────
     const recentTransactions = await Transaction.find({
       userId,
       timestamp: { $gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) },
     });
 
-    const averageAmount = recentTransactions.length > 0
-      ? recentTransactions.reduce((sum, t) => sum + t.amount, 0) / recentTransactions.length
-      : amount;
+    const averageAmount =
+      recentTransactions.length > 0
+        ? recentTransactions.reduce((sum, t) => sum + t.amount, 0) / recentTransactions.length
+        : amount;
 
-    // Calculate fraud score
+    // ── Fraud analysis ──────────────────────────────────────────────────────
     const fraudAnalysis = await fraudService.calculateFraudScore(userId, {
       amount,
       location,
@@ -46,7 +100,6 @@ export const submitTransaction = async (req, res) => {
       timestamp: new Date(),
     });
 
-    // Generate explanations
     const explanations = explainabilityService.generateExplanations(
       { amount, location, deviceId, deviceName, timestamp: new Date() },
       fraudAnalysis,
@@ -55,14 +108,14 @@ export const submitTransaction = async (req, res) => {
 
     const summary = explainabilityService.generateSummary(fraudAnalysis.score, explanations);
 
-    // Determine if transaction should be flagged
-    const isFlagged = fraudAnalysis.score > 0.6;
-    const status = isFlagged ? 'flagged' : 'completed';
+    const isFlagged = fraudAnalysis.score > (parseFloat(process.env.FRAUD_THRESHOLD) || 0.6);
+    const status    = isFlagged ? 'flagged' : 'completed';
 
-    // Create transaction record
+    // ── Persist transaction ─────────────────────────────────────────────────
     const transaction = new Transaction({
       userId,
       amount,
+      currency,
       location,
       deviceId,
       deviceName,
@@ -76,57 +129,35 @@ export const submitTransaction = async (req, res) => {
 
     await transaction.save();
 
-    // Update user location history
-    const existingLocation = user.locationHistory.find(
-      (loc) => loc.location.toLowerCase() === location.toLowerCase()
-    );
+    // ── Update user behavioral fingerprint ─────────────────────────────────
+    updateDeviceRecord(user, { deviceId, deviceName, location });
+    updateLocationRecord(user, location);
 
-    if (existingLocation) {
-      existingLocation.lastUsed = new Date();
-      existingLocation.count = (existingLocation.count || 0) + 1;
-    } else {
-      user.locationHistory.push({
-        location,
-        lastUsed: new Date(),
-        count: 1,
-      });
-    }
+    // Track last transaction time (for decay calculation)
+    user.lastTransactionAt = new Date();
 
-    // Update device history
-    const existingDevice = user.devices.find((d) => d.deviceId === deviceId);
-    if (existingDevice) {
-      existingDevice.lastUsed = new Date();
-    } else {
-      user.devices.push({
-        deviceId,
-        name: deviceName,
-        lastUsed: new Date(),
-        isTrusted: false,
-      });
-    }
-
-    // Update trust score
+    // ── Recalculate trust score ─────────────────────────────────────────────
     const newTrustScore = await trustScoreService.calculateTrustScore(userId);
     user.trustScore = newTrustScore.score;
-    user.riskLevel = newTrustScore.riskLevel;
+    user.riskLevel  = newTrustScore.riskLevel;
 
-    if (isFlagged) {
-      user.accountStatus = user.trustScore < 40 ? 'flagged' : 'active';
+    if (isFlagged && user.trustScore < 40) {
+      user.accountStatus = 'flagged';
     }
 
     await user.save();
 
-    // Create fraud log
+    // ── Fraud log ───────────────────────────────────────────────────────────
     const fraudLog = new FraudLog({
-      transactionId: transaction._id,
+      transactionId:        transaction._id,
       userId,
-      fraudScore: fraudAnalysis.score,
-      aiReasons: explanations,
+      fraudScore:           fraudAnalysis.score,
+      aiReasons:            explanations,
       riskFactors: {
-        amountAnomaly: { detected: fraudAnalysis.riskFactors.amountRisk > 0.5, reason: 'Amount deviation detected' },
-        locationAnomaly: { detected: fraudAnalysis.riskFactors.locationRisk > 0.4, reason: 'Unusual location detected' },
-        timeAnomaly: { detected: fraudAnalysis.riskFactors.timeRisk > 0.5, reason: 'Unusual transaction time' },
-        deviceAnomaly: { detected: fraudAnalysis.riskFactors.deviceRisk > 0.5, reason: 'New device detected' },
+        amountAnomaly:    { detected: fraudAnalysis.riskFactors.amountRisk > 0.5,    reason: 'Amount deviation detected' },
+        locationAnomaly:  { detected: fraudAnalysis.riskFactors.locationRisk > 0.4,  reason: 'Unusual location detected' },
+        timeAnomaly:      { detected: fraudAnalysis.riskFactors.timeRisk > 0.5,      reason: 'Unusual transaction time' },
+        deviceAnomaly:    { detected: fraudAnalysis.riskFactors.deviceRisk > 0.5,    reason: 'New device detected' },
         frequencyAnomaly: { detected: fraudAnalysis.riskFactors.frequencyRisk > 0.4, reason: 'High transaction frequency' },
       },
       trustScoreAdjustment: isFlagged ? -5 : 0,
@@ -134,30 +165,54 @@ export const submitTransaction = async (req, res) => {
 
     await fraudLog.save();
 
+    // ── Real-time Socket.io broadcast ───────────────────────────────────────
+    if (isFlagged && req.io) {
+      req.io.emit('fraudFlagged', {
+        transactionId: transaction._id,
+        userId,
+        amount,
+        location,
+        deviceName,
+        category,
+        fraudScore:       fraudAnalysis.score,
+        riskLevel:        newTrustScore.riskLevel,
+        summary:          summary.summary,
+        severity:         fraudAnalysis.score > 0.8 ? 'critical' : 'high',
+        timestamp:        new Date().toISOString(),
+        explanations,
+        trustScoreImpact: -5,
+      });
+      console.log(`🚨 [REALTIME] Fraud detected and broadcast: ${transaction._id}`);
+    }
+
     return res.json({
-      transaction: transaction._id,
+      transaction:  transaction._id,
       status,
-      fraudScore: fraudAnalysis.score.toFixed(3),
+      fraudScore:   fraudAnalysis.score.toFixed(3),
       isFlagged,
       summary,
       explanations,
-      trustScore: user.trustScore,
-      riskLevel: user.riskLevel,
+      trustScore:   user.trustScore,
+      riskLevel:    user.riskLevel,
     });
   } catch (error) {
     console.error('Transaction submission error:', error);
-    res.status(500).json({ error: error.message });
+    return res.status(500).json({ error: 'InternalError', message: error.message });
   }
 };
 
 /**
- * GET /api/transactions/:userId
- * Get transaction history for a user
+ * GET /api/transactions/user/:userId
  */
 export const getUserTransactions = async (req, res) => {
   try {
-    const { userId } = req.params;
+    const userId = req.params.userId;
     const { limit = 20, offset = 0 } = req.query;
+
+    // Users can only read their own transactions
+    if (userId !== req.user.id) {
+      return res.status(403).json({ error: 'Forbidden', message: 'Access denied' });
+    }
 
     const transactions = await Transaction.find({ userId })
       .sort({ timestamp: -1 })
@@ -166,47 +221,42 @@ export const getUserTransactions = async (req, res) => {
 
     const total = await Transaction.countDocuments({ userId });
 
-    res.json({
-      transactions,
-      total,
-      limit: parseInt(limit),
-      offset: parseInt(offset),
-    });
+    return res.json({ transactions, total, limit: parseInt(limit), offset: parseInt(offset) });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    return res.status(500).json({ error: 'InternalError', message: error.message });
   }
 };
 
 /**
- * GET /api/trust-score/:userId
- * Get detailed trust score and insights
+ * GET /api/transactions/trust-score/:userId
  */
 export const getTrustScore = async (req, res) => {
   try {
-    const { userId } = req.params;
+    const userId = req.params.userId;
+
+    if (userId !== req.user.id) {
+      return res.status(403).json({ error: 'Forbidden', message: 'Access denied' });
+    }
 
     const user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({ error: 'User not found' });
-    }
+    if (!user) return res.status(404).json({ error: 'NotFound', message: 'User not found' });
 
     const insights = await trustScoreService.getTrustScoreInsights(userId);
 
-    res.json({
+    return res.json({
       userId,
-      trustScore: user.trustScore,
-      riskLevel: user.riskLevel,
+      trustScore:    user.trustScore,
+      riskLevel:     user.riskLevel,
       accountStatus: user.accountStatus,
       insights,
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    return res.status(500).json({ error: 'InternalError', message: error.message });
   }
 };
 
 /**
- * GET /api/fraud-logs/:transactionId
- * Get detailed fraud analysis for a specific transaction
+ * GET /api/transactions/fraud-log/:transactionId
  */
 export const getFraudLog = async (req, res) => {
   try {
@@ -214,18 +264,18 @@ export const getFraudLog = async (req, res) => {
 
     const fraudLog = await FraudLog.findOne({ transactionId });
     if (!fraudLog) {
-      return res.status(404).json({ error: 'Fraud log not found' });
+      return res.status(404).json({ error: 'NotFound', message: 'Fraud log not found' });
     }
 
-    res.json(fraudLog);
+    // Verify this log belongs to the requesting user
+    if (fraudLog.userId.toString() !== req.user.id) {
+      return res.status(403).json({ error: 'Forbidden', message: 'Access denied' });
+    }
+
+    return res.json(fraudLog);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    return res.status(500).json({ error: 'InternalError', message: error.message });
   }
 };
 
-export default {
-  submitTransaction,
-  getUserTransactions,
-  getTrustScore,
-  getFraudLog,
-};
+export default { submitTransaction, getUserTransactions, getTrustScore, getFraudLog };

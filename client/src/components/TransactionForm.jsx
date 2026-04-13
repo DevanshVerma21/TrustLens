@@ -34,13 +34,13 @@ const TransactionForm = ({ onSubmit, loading = false }) => {
 
   return (
     <div className="clay-card">
-      <h2 className="text-2xl font-bold text-gray-800 mb-6">Submit Transaction</h2>
+      <h2 className="text-xl font-bold text-gray-100 mb-6 flex items-center gap-2">💸 Submit Transaction</h2>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Amount */}
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
-            Transaction Amount ($)
+          <label className="block text-sm font-medium text-gray-400 mb-1.5">
+            Transaction Amount (₹)
           </label>
           <input
             type="number"
@@ -56,7 +56,7 @@ const TransactionForm = ({ onSubmit, loading = false }) => {
 
         {/* Location */}
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-400 mb-1.5">
             Location
           </label>
           <input
@@ -71,7 +71,7 @@ const TransactionForm = ({ onSubmit, loading = false }) => {
 
         {/* Device */}
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-400 mb-1.5">
             Device Name
           </label>
           <select
@@ -90,7 +90,7 @@ const TransactionForm = ({ onSubmit, loading = false }) => {
 
         {/* Category */}
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-400 mb-1.5">
             Transaction Category
           </label>
           <select
@@ -122,12 +122,11 @@ const TransactionForm = ({ onSubmit, loading = false }) => {
       </form>
 
       {/* Info Box */}
-      <div className="mt-6 p-4 bg-blue-50 rounded-2xl border border-blue-200">
-        <p className="text-xs text-blue-800 font-semibold uppercase">ℹ️ How it works:</p>
-        <p className="text-sm text-blue-900 mt-2">
-          Our AI will analyze your transaction in real-time, checking for unusual patterns like
-          amount anomalies, new locations, and device changes. Results are instant and 100%
-          explainable.
+      <div className="mt-5 p-4 bg-blue-500/10 rounded-xl border border-blue-500/20">
+        <p className="text-xs text-blue-400 font-semibold uppercase tracking-wider">ℹ️ How it works</p>
+        <p className="text-xs text-blue-300/70 mt-2 leading-relaxed">
+          Our AI analyzes your transaction in real-time — checking amount anomalies, location changes,
+          and device fingerprints. Results are instant and fully explainable.
         </p>
       </div>
     </div>

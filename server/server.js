@@ -4,32 +4,61 @@ import { Server } from 'socket.io';
 import mongoose from 'mongoose';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
+import { dirname, resolve } from 'path';
 
-// Load environment variables
-dotenv.config();
+// Resolve .env from the repo root (one level above /server)
+const __dirname = dirname(fileURLToPath(import.meta.url));
+dotenv.config({ path: resolve(__dirname, '..', '.env') });
 
-// Import routes
+// ── Routes ────────────────────────────────────────────────────────────────────
+import authRoutes        from './routes/auth.js';
 import transactionRoutes from './routes/transactions.js';
 
-const app = express();
+// ── Middleware ────────────────────────────────────────────────────────────────
+import { globalRateLimiter } from './middleware/rateLimiter.js';
+
+// ── App setup ─────────────────────────────────────────────────────────────────
+const app        = express();
 const httpServer = createServer(app);
-const io = new Server(httpServer, {
+const io         = new Server(httpServer, {
   cors: {
-    origin: process.env.CLIENT_URL || 'http://localhost:5173',
+    origin: [
+      process.env.CLIENT_URL,
+      'http://localhost:5173',
+      'http://localhost:5174',
+      'http://127.0.0.1:5173',
+      'http://127.0.0.1:5174'
+    ],
     methods: ['GET', 'POST'],
   },
 });
 
-/**
- * Middleware
- */
-app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// ── Security headers (lightweight, no helmet dependency) ─────────────────────
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  next();
+});
 
-/**
- * MongoDB Connection
- */
+// ── Core middleware ───────────────────────────────────────────────────────────
+app.use(cors({
+  origin: [
+    process.env.CLIENT_URL,
+    'http://localhost:5173',
+    'http://localhost:5174',
+    'http://127.0.0.1:5173',
+    'http://127.0.0.1:5174'
+  ],
+  credentials: true,
+}));
+app.use(express.json({ limit: '10kb' }));            // prevent JSON bombs
+app.use(express.urlencoded({ extended: true }));
+app.use(globalRateLimiter);                          // site-wide 200 req / 15 min
+
+// ── MongoDB ───────────────────────────────────────────────────────────────────
 const connectDB = async () => {
   try {
     await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/trustlens');
@@ -42,88 +71,88 @@ const connectDB = async () => {
 
 connectDB();
 
-/**
- * Socket.io Real-time Connection
- */
+// ── Socket.io ─────────────────────────────────────────────────────────────────
 const activeUsers = new Map();
 
 io.on('connection', (socket) => {
   console.log(`📱 Client connected: ${socket.id}`);
 
-  // Store user connection
   socket.on('userConnected', (userId) => {
     activeUsers.set(socket.id, userId);
-    console.log(`👤 User ${userId} connected`);
+    console.log(`👤 User ${userId} connected (socket ${socket.id})`);
   });
 
-  // Disconnect
   socket.on('disconnect', () => {
     activeUsers.delete(socket.id);
     console.log(`📱 Client disconnected: ${socket.id}`);
   });
 
-  // Listen for transaction alerts
+  // Legacy relay — client can still push transactionAlert events
   socket.on('transactionAlert', (data) => {
-    console.log('🔔 Transaction Alert:', data);
+    console.log('🔔 Transaction Alert relay:', data);
     io.emit('fraudDetected', data);
   });
 });
 
-// Middleware to attach io to req
+// Attach io to every request so controllers can emit events
 app.use((req, res, next) => {
   req.io = io;
   next();
 });
 
-/**
- * Routes
- */
+// ── Routes ────────────────────────────────────────────────────────────────────
+app.use('/api/auth',         authRoutes);
 app.use('/api/transactions', transactionRoutes);
 
-/**
- * Health Check
- */
+// ── Health check ──────────────────────────────────────────────────────────────
 app.get('/api/health', (req, res) => {
   res.json({
-    status: 'OK',
-    timestamp: new Date().toISOString(),
-    mongodb: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
+    status:     'OK',
+    timestamp:  new Date().toISOString(),
+    mongodb:    mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
+    uptime:     Math.round(process.uptime()) + 's',
   });
 });
 
-/**
- * Welcome Route
- */
+// ── Welcome ───────────────────────────────────────────────────────────────────
 app.get('/', (req, res) => {
   res.json({
-    message: 'TrustLens - Explainable AI Layer for Digital Banking',
-    version: '1.0.0',
+    message:  'TrustLens — Explainable AI Layer for Digital Banking',
+    version:  '2.0.0',
+    security: 'JWT + bcrypt + rate-limiting + Joi validation',
     endpoints: {
-      submitTransaction: 'POST /api/transactions',
-      getUserTransactions: 'GET /api/transactions/user/:userId',
-      getTrustScore: 'GET /api/transactions/trust-score/:userId',
-      getFraudLog: 'GET /api/transactions/fraud-log/:transactionId',
-      health: 'GET /api/health',
+      register:            'POST /api/auth/register',
+      login:               'POST /api/auth/login',
+      refresh:             'POST /api/auth/refresh',
+      logout:              'POST /api/auth/logout',
+      me:                  'GET  /api/auth/me',
+      submitTransaction:   'POST /api/transactions',
+      getUserTransactions: 'GET  /api/transactions/user/:userId',
+      getTrustScore:       'GET  /api/transactions/trust-score/:userId',
+      getFraudLog:         'GET  /api/transactions/fraud-log/:transactionId',
+      health:              'GET  /api/health',
     },
   });
 });
 
-/**
- * Error Handling
- */
+// ── Error handler ─────────────────────────────────────────────────────────────
 app.use((err, req, res, next) => {
-  console.error('🔴 Error:', err);
-  res.status(500).json({ error: err.message || 'Internal Server Error' });
+  console.error('🔴 Unhandled error:', err);
+  res.status(500).json({ error: 'InternalError', message: err.message || 'Internal Server Error' });
 });
 
-/**
- * Start Server
- */
+// 404
+app.use((req, res) => {
+  res.status(404).json({ error: 'NotFound', message: `Route ${req.method} ${req.path} not found` });
+});
+
+// ── Start ─────────────────────────────────────────────────────────────────────
 const PORT = process.env.PORT || 5000;
 httpServer.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`🚀 TrustLens v2.0 — port ${PORT}`);
   console.log(`🌐 http://localhost:${PORT}`);
-  console.log(`📡 WebSocket ready on ws://localhost:${PORT}`);
+  console.log(`🔐 Auth:   POST /api/auth/register | /login | /refresh`);
+  console.log(`📡 WS:     ws://localhost:${PORT}`);
 });
 
 export { io, app };

@@ -11,7 +11,9 @@ const TransactionList = ({ transactions = [], onTransactionClick }) => {
   };
 
   const getStatusColor = (isFlagged) => {
-    return isFlagged ? 'bg-red-50' : 'bg-green-50';
+    return isFlagged
+      ? 'bg-red-500/10 border border-red-500/20'
+      : 'bg-emerald-500/5 border border-white/5';
   };
 
   const getCategoryEmoji = (category) => {
@@ -28,12 +30,12 @@ const TransactionList = ({ transactions = [], onTransactionClick }) => {
 
   return (
     <div className="clay-card">
-      <h2 className="text-2xl font-bold text-gray-800 mb-6">Recent Transactions</h2>
+      <h2 className="text-xl font-bold text-gray-100 mb-6 flex items-center gap-2">📋 Recent Transactions</h2>
 
       {transactions.length === 0 ? (
         <div className="text-center py-12">
           <p className="text-gray-500 text-lg">No transactions yet</p>
-          <p className="text-gray-400 text-sm mt-2">Submit a transaction to get started</p>
+          <p className="text-gray-600 text-sm mt-2">Submit a transaction to get started</p>
         </div>
       ) : (
         <div className="space-y-3 max-h-96 overflow-y-auto">
@@ -52,19 +54,19 @@ const TransactionList = ({ transactions = [], onTransactionClick }) => {
                     {getCategoryEmoji(transaction.category)}
                   </div>
                   <div className="flex-1">
-                    <p className="font-semibold text-gray-800 capitalize">
+                    <p className="font-semibold text-gray-200 capitalize">
                       {transaction.category}
                     </p>
-                    <p className="text-sm text-gray-600">{transaction.location}</p>
+                    <p className="text-sm text-gray-500">{transaction.location}</p>
                   </div>
                 </div>
 
                 {/* Middle: Amount */}
                 <div className="text-right mx-4">
-                  <p className="font-bold text-lg text-gray-800">
-                    ${transaction.amount.toFixed(2)}
+                  <p className="font-bold text-base text-white font-mono">
+                    ₹{Number(transaction.amount).toLocaleString('en-IN')}
                   </p>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-gray-600 font-mono">
                     {new Date(transaction.timestamp).toLocaleDateString()}
                   </p>
                 </div>
@@ -72,14 +74,16 @@ const TransactionList = ({ transactions = [], onTransactionClick }) => {
                 {/* Right: Status */}
                 <div className="flex items-center gap-2">
                   {getStatusIcon(transaction.isFlagged)}
-                  <span className="text-sm font-semibold text-gray-600">
-                    {transaction.isFlagged ? 'Flagged' : 'Approved'}
+                  <span className={`text-xs font-bold font-mono ${
+                    transaction.isFlagged ? 'text-red-400' : 'text-emerald-400'
+                  }`}>
+                    {transaction.isFlagged ? 'FLAGGED' : 'CLEARED'}
                   </span>
                 </div>
               </div>
 
               {/* Fraud Score bar */}
-              <div className="mt-3 h-1 bg-gray-200 rounded-full overflow-hidden">
+              <div className="mt-3 h-1 bg-white/5 rounded-full overflow-hidden">
                 <div
                   className="h-full transition-all"
                   style={{
