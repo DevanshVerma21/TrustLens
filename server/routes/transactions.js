@@ -4,6 +4,7 @@ import {
   getUserTransactions,
   getTrustScore,
   getFraudLog,
+  approveTransaction,
 } from '../controllers/transactionController.js';
 
 const router = express.Router();
@@ -23,5 +24,8 @@ router.get('/trust-score/:userId', getTrustScore);
 
 // GET: Get detailed fraud analysis for a transaction
 router.get('/fraud-log/:transactionId', getFraudLog);
+
+// PUT: Manually approve transaction
+router.put('/:transactionId/approve', approveTransaction);
 
 export default router;

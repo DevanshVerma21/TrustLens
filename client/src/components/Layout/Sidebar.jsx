@@ -9,7 +9,7 @@ const navItems = [
   { path: '/', label: 'Dashboard', icon: Home },
   { path: '/send-payment', label: 'Send Payment', icon: Send },
   { path: '/transactions', label: 'Transactions', icon: ListIcon },
-  { path: '/fraud-simulator', label: 'Fraud Simulation', icon: Zap },
+  { path: '/fraud-simulator', label: 'Fraud Detection', icon: Zap },
   { path: '/alerts', label: 'Alerts', icon: AlertCircle },
   { path: '/privacy', label: 'Privacy', icon: Lock },
 ];
@@ -87,12 +87,12 @@ export default function Sidebar({ isOpen, setOpen, alertCount = 0 }) {
                 onClick={handleLinkClick}
                 className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all ${
                   isActive
-                    ? 'font-semibold'
-                    : 'opacity-60 hover:opacity-100'
+                    ? 'font-bold'
+                    : 'opacity-90 hover:opacity-100 hover:bg-slate-800'
                 }`}
                 style={{
-                  backgroundColor: isActive ? 'var(--color-primary-light)' : 'transparent',
-                  color: isActive ? 'var(--color-primary)' : 'var(--color-text-muted)',
+                  backgroundColor: isActive ? 'rgba(59, 130, 246, 0.15)' : 'transparent',
+                  color: isActive ? 'var(--color-primary)' : 'var(--color-text)',
                 }}
               >
                 <Icon className="w-5 h-5 flex-shrink-0" />

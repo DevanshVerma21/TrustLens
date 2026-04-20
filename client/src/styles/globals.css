@@ -3,42 +3,52 @@
 @tailwind utilities;
 
 :root {
-  /* Primary Colors */
-  --color-primary: #1A56DB;
-  --color-primary-dark: #1345B7;
-  --color-primary-light: #E0E7FF;
+  /* Primary Colors - Brighter Cyan/Blue for the TrendAI look */
+  --color-primary: #00E5FF;
+  --color-primary-dark: #00B8D4;
+  --color-primary-light: rgba(0, 229, 255, 0.15);
 
-  /* Background & Surface */
-  --color-bg: #F8FAFC;
-  --color-surface: #FFFFFF;
-  --color-surface-secondary: #F1F5F9;
+  /* Background & Surface - Ultra Dark Navy/Black */
+  --color-bg: #0A0F1A;
+  --color-surface: #131A26;
+  --color-surface-secondary: #1E293B;
 
-  /* Text */
-  --color-text: #0F172A;
-  --color-text-muted: #64748B;
-  --color-text-light: #94A3B8;
+  /* Text - Crisp White & Cool Grays */
+  --color-text: #F8FAFC;
+  --color-text-muted: #9CA3AF;
+  --color-text-light: #6B7280;
 
   /* Border */
-  --color-border: #E2E8F0;
-  --color-border-light: #F1F5F9;
+  --color-border: #334155;
+  --color-border-light: #1E293B;
 
   /* Status Colors */
-  --color-success: #16A34A;
-  --color-danger: #DC2626;
-  --color-warning: #D97706;
-  --color-info: #0284C7;
+  --color-success: #10B981;
+  --color-danger: #EF4444;
+  --color-warning: #F59E0B;
+  --color-info: #3B82F6;
 
   /* Trust Score Colors */
-  --color-trust-high: #16A34A;
-  --color-trust-medium: #D97706;
-  --color-trust-low: #DC2626;
+  --color-trust-high: #10B981;
+  --color-trust-medium: #F59E0B;
+  --color-trust-low: #EF4444;
 
   /* Shadows */
-  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
-  --shadow-md: 0 4px 6px rgba(15, 23, 42, 0.1);
-  --shadow-lg: 0 10px 15px rgba(15, 23, 42, 0.1);
-  --shadow-xl: 0 20px 25px rgba(15, 23, 42, 0.1);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.6);
+  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.6);
 }
+
+/* Global Overrides for Hardcoded Tailwind classes to forcefully apply Dark Mode */
+.bg-white { background-color: var(--color-surface) !important; }
+.bg-slate-50 { background-color: var(--color-surface-secondary) !important; }
+.bg-clay-50 { background-color: var(--color-surface-secondary) !important; }
+.bg-slate-100 { background-color: var(--color-border-light) !important; }
+.text-slate-900, .text-slate-800, .text-gray-900, .text-clay-900, .text-gray-800 { color: var(--color-text) !important; }
+.text-slate-700, .text-slate-600, .text-gray-600, .text-clay-700 { color: var(--color-text-muted) !important; }
+.border-slate-200, .border-slate-300, .border-clay-300 { border-color: var(--color-border) !important; }
+
 
 /* Reset & Base Styles */
 * {
@@ -364,3 +374,52 @@ pre {
     display: none;
   }
 }
+
+
+/* Enhanced Deep Dark Mode Overrides */
+.bg-white { background-color: var(--color-surface) !important; }
+.bg-slate-50, .bg-gray-50, .bg-clay-50 { background-color: var(--color-surface-secondary) !important; }
+.bg-slate-100, .bg-gray-100, .bg-clay-100 { background-color: var(--color-surface-secondary) !important; }
+.bg-slate-200, .bg-gray-200, .bg-clay-200 { background-color: var(--color-border) !important; }
+.bg-slate-300, .bg-gray-300, .bg-clay-300, .bg-clay-400 { background-color: var(--color-border-light) !important; }
+.hover\:bg-slate-50:hover, .hover\:bg-gray-50:hover, .hover\:bg-white\/20:hover {
+  background-color: var(--color-surface-secondary) !important;
+}
+
+.txn-row {
+  background-color: transparent;
+}
+
+.txn-row:hover {
+  background-color: rgba(148, 163, 184, 0.08);
+}
+
+.text-slate-900, .text-slate-800, .text-gray-900, .text-gray-800, .text-clay-900 { color: var(--color-text) !important; }
+.text-slate-700, .text-slate-600, .text-gray-700, .text-gray-600, .text-clay-700 { color: var(--color-text-muted) !important; }
+.text-slate-500, .text-gray-500, .text-clay-500 { color: var(--color-text-light) !important; }
+.text-slate-400, .text-gray-400, .text-clay-400 { color: var(--color-text-light) !important; }
+
+.border-slate-200, .border-slate-300, .border-clay-300, .border-gray-200, .border-gray-300 { border-color: var(--color-border) !important; }
+.border-slate-100, .border-clay-100, .border-gray-100 { border-color: var(--color-border-light) !important; }
+
+/* Keep specific text like button text white inside primary */
+.btn { color: #FFFFFF !important; }
+.bg-primary { color: #FFFFFF !important; }
+
+/* Global Form Inputs Dark Mode Fix */
+input, select, textarea {
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  border-color: var(--color-border);
+}
+input:focus, select:focus, textarea:focus {
+  background-color: var(--color-surface);
+  color: var(--color-text);
+}
+/* Fix specifically for the select options */
+select option {
+  background-color: var(--color-surface) !important;
+  color: var(--color-text) !important;
+}
+
+
