@@ -208,4 +208,27 @@ router.get('/me', authMiddleware, async (req, res, next) => {
   }
 });
 
+// DELETE: Delete own account (protected)
+router.delete('/me', authMiddleware, async (req, res, next) => {
+  try {
+    const userId = req.user.userId;
+
+    // Import Transaction model inline to avoid circular deps
+    const { default: Transaction } = await import('../models/Transaction.js');
+
+    // Delete all of the user's transactions first
+    await Transaction.deleteMany({ userId });
+
+    // Then delete the user document
+    await User.findByIdAndDelete(userId);
+
+    // Clear the refresh token cookie
+    res.clearCookie('refreshToken', COOKIE_OPTIONS);
+
+    res.json({ success: true, data: { message: 'Account deleted successfully' } });
+  } catch (error) {
+    next(error);
+  }
+});
+
 export default router;

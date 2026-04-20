@@ -3,10 +3,12 @@ import { AlertsSkeleton } from '../components/LoadingSkeletons';
 import TransactionRow from '../components/TransactionRow';
 import TransactionDetailModal from '../components/TransactionDetailModal';
 import { useTransactions } from '../hooks/useTransactions';
+import { useCardBlock } from '../contexts/CardBlockContext';
 
 export default function Alerts({ user }) {
   const [page, setPage] = useState(1);
   const [selectedTransaction, setSelectedTransaction] = useState(null);
+  const { blockCard, isBlocked } = useCardBlock();
   
   const {
     transactions,
@@ -73,21 +75,26 @@ export default function Alerts({ user }) {
         <div className="rounded-lg border bg-white overflow-hidden" style={{ borderColor: 'var(--color-border)' }}>
           <table className="w-full text-sm">
             <tbody>
-              {transactions.map((txn) => (
-                <TransactionRow
-                  key={txn._id || `${txn.timestamp}-${txn.amount}`}
-                  transaction={txn}
-                  onSelect={() => setSelectedTransaction(txn)}
-                  actionLabel="Block Card"
-                  onAction={(txn) => {
-                    const confirmBlock = window.confirm(`Are you sure you want to block your card due to this transaction at ${txn.merchant || 'this merchant'}?`);
-                    if (confirmBlock) {
-                      alert('Card blocked successfully. Please contact support to issue a replacement.');
-                      // Ideally call an endpoint to block the card here
-                    }
-                  }}
-                />
-              ))}
+              {transactions.map((txn) => {
+                const txnId = txn._id || `${txn.timestamp}-${txn.amount}`;
+                const blocked = isBlocked(txnId);
+                return (
+                  <TransactionRow
+                    key={txnId}
+                    transaction={txn}
+                    onSelect={() => setSelectedTransaction(txn)}
+                    isBlocked={blocked}
+                    actionLabel={blocked ? 'Card Blocked' : 'Block Card'}
+                    onAction={(txn) => {
+                      if (blocked) return;
+                      const confirmBlock = window.confirm(`Are you sure you want to block your card due to this transaction at ${txn.merchant || 'this merchant'}?`);
+                      if (confirmBlock) {
+                        blockCard(txnId, txn);
+                      }
+                    }}
+                  />
+                );
+              })}
             </tbody>
           </table>
         </div>

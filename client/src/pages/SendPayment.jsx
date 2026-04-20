@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { ShieldCheck, Crosshair, ArrowRight, AlertCircle, CheckCircle, Zap } from 'lucide-react';
+import { ShieldCheck, Crosshair, ArrowRight, AlertCircle, CheckCircle, Zap, Ban } from 'lucide-react';
 import { transactionAPI } from '../utils/api';
 import useTrust from '../hooks/useTrust';
+import { useCardBlock } from '../contexts/CardBlockContext';
 
 export default function SendPayment({ user }) {
   const { score, refetch: refetchTrust } = useTrust();
+  const { isCardBlocked, blockedTransactions } = useCardBlock();
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
 
@@ -168,10 +170,14 @@ export default function SendPayment({ user }) {
 
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || isCardBlocked}
               className="w-full mt-4 flex items-center justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
             >
-              {loading ? (
+              {isCardBlocked ? (
+                <span className="flex items-center gap-2">
+                  <Ban className="w-4 h-4" /> Card Blocked — Payments Disabled
+                </span>
+              ) : loading ? (
                 <span className="flex items-center gap-2">
                   <Crosshair className="w-4 h-4 animate-spin" /> Analyzing Viability...
                 </span>
@@ -191,7 +197,24 @@ export default function SendPayment({ user }) {
             borderColor: 'var(--color-border)',
           }}
         >
-          {!result && !loading && (
+          {/* Card Blocked Banner */}
+          {isCardBlocked && !result && !loading && (
+            <div
+              className="w-full max-w-sm rounded-xl p-6 shadow-sm border text-center"
+              style={{
+                backgroundColor: 'rgba(239,68,68,0.12)',
+                borderColor: 'rgba(239,68,68,0.45)',
+              }}
+            >
+              <Ban className="w-16 h-16 mx-auto mb-3 text-red-500" />
+              <h3 className="text-2xl font-bold text-red-500 mb-2">Card Blocked</h3>
+              <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
+                Your card has been blocked due to a suspicious transaction. No new payments can be processed.
+              </p>
+            </div>
+          )}
+
+          {!result && !loading && !isCardBlocked && (
             <div className="text-center text-slate-400 max-w-sm">
               <Zap className="w-12 h-12 mx-auto mb-4 opacity-50" />
               <p>Submit a payment on the left to see TrustLens analyze its viability and calculate its Trust Score impact.</p>
@@ -245,7 +268,9 @@ export default function SendPayment({ user }) {
                     AI Reasoning
                   </div>
                   <div className="text-sm font-medium mt-1" style={{ color: 'var(--color-text)' }}>
-                    {result.systemMessage || result.reasoning?.ruleReason || result.reasoning?.fraudReason || (result.explanations && result.explanations[0]?.detail) || 'Transaction looks completely normal based on historical patterns.'}
+                    {isCardBlocked
+                      ? '🔴 Card Blocked'
+                      : result.systemMessage || result.reasoning?.ruleReason || result.reasoning?.fraudReason || (result.explanations && result.explanations[0]?.detail) || 'Transaction looks completely normal based on historical patterns.'}
                   </div>
                 </div>
               </div>

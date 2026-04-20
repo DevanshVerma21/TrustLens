@@ -68,15 +68,8 @@ export default function Header({ trustScore = 0, isConnected = false, alertCount
             {scoreChange < 0 && <TrendingDown className="w-3 h-3" />}
           </div>
 
-          {alertCount > 0 && (
-            <div
-              className="px-3 py-2 rounded-lg flex items-center gap-2 text-white font-semibold"
-              style={{ backgroundColor: 'var(--color-danger)' }}
-            >
-              <Bell className="w-4 h-4" />
-              <span className="text-sm">{alertCount}</span>
-            </div>
-          )}
+
+
 
           <div
             className="flex items-center gap-1 px-3 py-2 rounded-lg border text-xs font-semibold"

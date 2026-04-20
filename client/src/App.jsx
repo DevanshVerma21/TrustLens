@@ -11,6 +11,7 @@ import Auth from './pages/Auth';
 import useTrust from './hooks/useTrust';
 import useAlerts from './hooks/useAlerts';
 import { authAPI } from './utils/api';
+import { CardBlockProvider } from './contexts/CardBlockContext';
 
 function App() {
   const { score } = useTrust();
@@ -61,26 +62,28 @@ function App() {
   }
 
   return (
-    <Router>
-      <MainLayout
-        user={user}
-        trustScore={score?.score || 60}
-        alertCount={unreadCount}
-        isConnected={true}
-        onLogout={handleLogout}
-      >
-        <Routes>
-          <Route path="/" element={<Dashboard user={user} />} />
-          <Route path="/dashboard" element={<Dashboard user={user} />} />
-          <Route path="/transactions" element={<Transactions user={user} />} />
-          <Route path="/privacy" element={<Privacy user={user} />} />
-          <Route path="/fraud-simulator" element={<FraudSimulation user={user} />} />
-          <Route path="/send-payment" element={<SendPayment user={user} />} />
-          <Route path="/alerts" element={<Alerts user={user} />} />
-          <Route path="*" element={<Navigate to="/" />} />
-        </Routes>
-      </MainLayout>
-    </Router>
+    <CardBlockProvider>
+      <Router>
+        <MainLayout
+          user={user}
+          trustScore={score?.score || 60}
+          alertCount={unreadCount}
+          isConnected={true}
+          onLogout={handleLogout}
+        >
+          <Routes>
+            <Route path="/" element={<Dashboard user={user} />} />
+            <Route path="/dashboard" element={<Dashboard user={user} />} />
+            <Route path="/transactions" element={<Transactions user={user} />} />
+            <Route path="/privacy" element={<Privacy user={user} />} />
+            <Route path="/fraud-simulator" element={<FraudSimulation user={user} />} />
+            <Route path="/send-payment" element={<SendPayment user={user} />} />
+            <Route path="/alerts" element={<Alerts user={user} />} />
+            <Route path="*" element={<Navigate to="/" />} />
+          </Routes>
+        </MainLayout>
+      </Router>
+    </CardBlockProvider>
   );
 }
 

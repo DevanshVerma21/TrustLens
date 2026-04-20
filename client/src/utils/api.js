@@ -129,6 +129,7 @@ export const authAPI = {
   logout: () => api.post('/auth/logout'),
   getMe: () => api.get('/auth/me'),
   refresh: () => api.post('/auth/refresh'),
+  deleteAccount: () => api.delete('/auth/me'),
 };
 
 export const healthCheck = () => api.get('/health');

@@ -16,6 +16,7 @@ export default function TransactionRow({
   onAction = () => {},
   onSelect = () => {},
   actionLabel = 'Explain',
+  isBlocked = false,
 }) {
   const {
     amount = 0,
@@ -113,14 +114,26 @@ export default function TransactionRow({
         <button
           onClick={(event) => {
             event.stopPropagation();
-            onAction(transaction);
+            if (!isBlocked) onAction(transaction);
           }}
+          disabled={isBlocked}
           className="px-3 py-1 rounded-lg border text-xs font-semibold transition"
-          style={{
-            borderColor: actionLabel === 'Block Card' ? 'var(--color-danger)' : 'var(--color-primary)',
-            color: actionLabel === 'Block Card' ? 'white' : 'var(--color-primary)',
-            backgroundColor: actionLabel === 'Block Card' ? 'var(--color-danger)' : 'transparent',
-          }}
+          style={
+            isBlocked
+              ? {
+                  borderColor: 'var(--color-border)',
+                  color: 'var(--color-text-muted)',
+                  backgroundColor: 'var(--color-surface-secondary)',
+                  cursor: 'not-allowed',
+                  opacity: 0.7,
+                }
+              : {
+                  borderColor: actionLabel === 'Block Card' ? 'var(--color-danger)' : 'var(--color-primary)',
+                  color: actionLabel === 'Block Card' ? 'white' : 'var(--color-primary)',
+                  backgroundColor: actionLabel === 'Block Card' ? 'var(--color-danger)' : 'transparent',
+                  cursor: 'pointer',
+                }
+          }
         >
           {actionLabel}
         </button>

@@ -97,9 +97,6 @@ export default function Sidebar({ isOpen, setOpen, alertCount = 0 }) {
               >
                 <Icon className="w-5 h-5 flex-shrink-0" />
                 <span className="text-sm">{item.label}</span>
-                {item.path === '/alerts' && alertCount > 0 && (
-                  <AlertBadge count={alertCount} inline className="ml-auto" />
-                )}
               </Link>
             );
           })}
