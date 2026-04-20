@@ -72,7 +72,7 @@ export default function TransactionRow({
 
   return (
     <tr
-      className="border-b hover:bg-slate-50 cursor-pointer transition"
+      className="txn-row border-b cursor-pointer transition-colors"
       onClick={() => onSelect(transaction)}
       style={{ borderColor: 'var(--color-border)' }}
     >
@@ -118,6 +118,7 @@ export default function TransactionRow({
           style={{
             borderColor: 'var(--color-primary)',
             color: 'var(--color-primary)',
+            backgroundColor: 'transparent',
           }}
         >
           Explain

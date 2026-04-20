@@ -9,7 +9,7 @@ const navItems = [
   { path: '/', label: 'Dashboard', icon: Home },
   { path: '/send-payment', label: 'Send Payment', icon: Send },
   { path: '/transactions', label: 'Transactions', icon: ListIcon },
-  { path: '/fraud-simulator', label: 'Fraud Simulation', icon: Zap },
+  { path: '/fraud-simulator', label: 'Fraud Detection', icon: Zap },
   { path: '/alerts', label: 'Alerts', icon: AlertCircle },
   { path: '/privacy', label: 'Privacy', icon: Lock },
 ];
@@ -56,7 +56,7 @@ export default function Sidebar({ isOpen, setOpen, alertCount = 0 }) {
       <div
         className={`${
           isOpen ? 'translate-x-0' : '-translate-x-full'
-        } fixed md:static w-64 h-screen rounded-none md:rounded-r-lg transition-all duration-300 z-40 flex flex-col border-r md:border-t-0`}
+        } fixed md:static w-64 h-full min-h-screen rounded-none transition-all duration-300 z-40 flex flex-col border-r md:border-t-0`}
         style={{
           backgroundColor: 'var(--color-surface)',
           borderColor: 'var(--color-border)',
@@ -87,12 +87,12 @@ export default function Sidebar({ isOpen, setOpen, alertCount = 0 }) {
                 onClick={handleLinkClick}
                 className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all ${
                   isActive
-                    ? 'font-semibold'
-                    : 'opacity-60 hover:opacity-100'
+                    ? 'font-bold'
+                    : 'opacity-90 hover:opacity-100 hover:bg-slate-800'
                 }`}
                 style={{
-                  backgroundColor: isActive ? 'var(--color-primary-light)' : 'transparent',
-                  color: isActive ? 'var(--color-primary)' : 'var(--color-text-muted)',
+                  backgroundColor: isActive ? 'rgba(59, 130, 246, 0.15)' : 'transparent',
+                  color: isActive ? 'var(--color-primary)' : 'var(--color-text)',
                 }}
               >
                 <Icon className="w-5 h-5 flex-shrink-0" />

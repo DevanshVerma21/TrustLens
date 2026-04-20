@@ -6,7 +6,7 @@ export default function MainLayout({ user, trustScore, alertCount, isConnected, 
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   return (
-    <div className="flex min-h-screen" style={{ backgroundColor: 'var(--color-bg)' }}>
+    <div className="flex h-screen w-full overflow-hidden" style={{ backgroundColor: 'var(--color-bg)' }}>
       {/* Sidebar */}
       <Sidebar isOpen={sidebarOpen} setOpen={setSidebarOpen} alertCount={alertCount} />
 

@@ -197,21 +197,29 @@ export default function Transactions({ user }) {
           </h2>
         </div>
         <ResponsiveContainer width="100%" height={260}>
-          <BarChart data={categoryData} margin={{ top: 8, right: 16, left: -10, bottom: 20 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
+          <BarChart data={categoryData} margin={{ top: 10, right: 20, left: 20, bottom: 35 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />  
             <XAxis dataKey="name" tick={{ fontSize: 12 }}>
-              <Label value="Category" position="insideBottom" offset={-10} />
+              <Label value="Category" position="insideBottom" offset={-20} style={{ fill: 'var(--color-text-muted)' }} />     
             </XAxis>
             <YAxis tick={{ fontSize: 12 }}>
-              <Label value="Transactions" angle={-90} position="insideLeft" offset={10} />
+              <Label
+                value="Transactions"
+                angle={-90}
+                position="insideLeft"
+                offset={-10}
+                style={{ textAnchor: 'middle', fill: 'var(--color-text-muted)' }}
+              />
             </YAxis>
             <Tooltip
+              cursor={{ fill: 'rgba(0, 229, 255, 0.08)' }}
               contentStyle={{
                 backgroundColor: 'var(--color-surface)',
                 border: '1px solid var(--color-border)',
+                color: 'var(--color-text)',
               }}
             />
-            <Legend />
+            <Legend wrapperStyle={{ paddingTop: '20px' }} />
             <Bar dataKey="count" name="Transactions" fill="var(--color-primary)" radius={[6, 6, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>

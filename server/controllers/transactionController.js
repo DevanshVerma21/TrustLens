@@ -299,9 +299,54 @@ export const getFraudLog = async (req, res) => {
   }
 };
 
+/**
+ * PUT /api/transactions/:transactionId/approve
+ * Manually approve a flagged or declined transaction
+ */
+export const approveTransaction = async (req, res) => {
+  try {
+    const { transactionId } = req.params;
+    
+    const transaction = await Transaction.findById(transactionId);
+    if (!transaction) {
+      return res.status(404).json({ error: 'Transaction not found' });
+    }
+
+    const { userId } = transaction;
+    const user = await User.findById(userId);
+
+    // Increase trust score significantly for a manual override
+    if (user) {
+      user.trustScore = Math.min(100, user.trustScore + 15);
+      await user.save();
+    }
+
+    // Update transaction to approved
+    transaction.status = 'completed';
+    transaction.decision = 'APPROVE';
+    transaction.isFlagged = false;
+    transaction.trustScoreImpact = 15;
+    
+    if (transaction.reasoning) {
+      transaction.reasoning.fraudReason = 'Manually verified and approved by user request.';
+      transaction.systemMessage = 'Payment Allowed (Manual Override)';
+    } else {
+      transaction.systemMessage = 'Payment Allowed (Manual Override)';
+    }
+
+    await transaction.save();
+
+    res.json({ message: 'Transaction successfully approved', transaction, updatedTrustScore: user?.trustScore });
+  } catch (error) {
+    console.error('Approve Error: ', error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
 export default {
   submitTransaction,
   getUserTransactions,
   getTrustScore,
   getFraudLog,
+  approveTransaction,
 };

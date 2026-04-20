@@ -60,6 +60,25 @@ export default function SendPayment({ user }) {
     }
   };
 
+  const isRiskResult =
+    result?.isFlagged ||
+    result?.status?.toLowerCase() === 'block' ||
+    result?.status?.toLowerCase() === 'blocked';
+
+  const resultTheme = isRiskResult
+    ? {
+        surface: 'rgba(239, 68, 68, 0.14)',
+        border: 'rgba(239, 68, 68, 0.45)',
+        heading: 'var(--color-danger)',
+        panel: 'rgba(239, 68, 68, 0.1)',
+      }
+    : {
+        surface: 'rgba(16, 185, 129, 0.14)',
+        border: 'rgba(16, 185, 129, 0.45)',
+        heading: 'var(--color-success)',
+        panel: 'rgba(16, 185, 129, 0.1)',
+      };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -150,7 +169,13 @@ export default function SendPayment({ user }) {
           </form>
         </div>
 
-        <div className="bg-slate-50 rounded-xl border border-slate-200 p-6 flex flex-col items-center justify-center min-h-[400px]">
+        <div
+          className="rounded-xl border p-6 flex flex-col items-center justify-center min-h-[400px]"
+          style={{
+            backgroundColor: 'var(--color-surface-secondary)',
+            borderColor: 'var(--color-border)',
+          }}
+        >
           {!result && !loading && (
             <div className="text-center text-slate-400 max-w-sm">
               <Zap className="w-12 h-12 mx-auto mb-4 opacity-50" />
@@ -167,27 +192,46 @@ export default function SendPayment({ user }) {
           )}
 
           {result && !loading && !result.error && (
-            <div className={`w-full max-w-sm rounded-xl p-6 shadow-sm border ${result.isFlagged || result.status?.toLowerCase() === 'block' || result.status?.toLowerCase() === 'blocked' ? 'bg-red-50 border-red-200' : 'bg-green-50 border-green-200'} animate-in fade-in zoom-in duration-300`}>
+            <div
+              className="w-full max-w-sm rounded-xl p-6 shadow-sm border animate-in fade-in zoom-in duration-300"
+              style={{
+                backgroundColor: resultTheme.surface,
+                borderColor: resultTheme.border,
+              }}
+            >
               <div className="flex justify-center mb-4">
-                {result.isFlagged || result.status?.toLowerCase() === 'block' || result.status?.toLowerCase() === 'blocked' ? (
+                {isRiskResult ? (
                   <AlertCircle className="w-16 h-16 text-red-500" />
                 ) : (
                   <CheckCircle className="w-16 h-16 text-green-500" />
                 )}
               </div>
 
-              <h3 className={`text-2xl font-bold text-center mb-2 ${result.isFlagged || result.status?.toLowerCase() === 'block' || result.status?.toLowerCase() === 'blocked' ? 'text-red-700' : 'text-green-700'}`}>
+              <h3 className="text-2xl font-bold text-center mb-2" style={{ color: resultTheme.heading }}>
                 {result.status?.toLowerCase() === 'block' || result.status?.toLowerCase() === 'blocked' ? 'Payment Blocked' : result.isFlagged ? 'Payment Flagged' : 'Payment Allowed'}
               </h3>
 
-              <p className="text-center text-slate-600 text-sm mb-6">
-                Transaction ID: <span className="font-mono text-xs bg-white px-2 py-1 rounded">{result.transactionId || result._id}</span>
+              <p className="text-center text-sm mb-6" style={{ color: 'var(--color-text-muted)' }}>
+                Transaction ID:{' '}
+                <span
+                  className="font-mono text-xs px-2 py-1 rounded"
+                  style={{
+                    backgroundColor: 'var(--color-surface)',
+                    color: 'var(--color-text)',
+                  }}
+                >
+                  {result.transactionId || result._id}
+                </span>
               </p>
 
-              <div className="space-y-4 bg-white/60 p-4 rounded-lg">
+              <div className="space-y-4 p-4 rounded-lg" style={{ backgroundColor: resultTheme.panel }}>
                 <div>
-                  <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider">AI Reasoning</div>
-                  <div className="text-sm font-medium text-slate-800 mt-1">{result.systemMessage || result.reasoning?.ruleReason || result.reasoning?.fraudReason || (result.explanations && result.explanations[0]?.detail) || 'Transaction looks completely normal based on historical patterns.'}</div>
+                  <div className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--color-text-muted)' }}>
+                    AI Reasoning
+                  </div>
+                  <div className="text-sm font-medium mt-1" style={{ color: 'var(--color-text)' }}>
+                    {result.systemMessage || result.reasoning?.ruleReason || result.reasoning?.fraudReason || (result.explanations && result.explanations[0]?.detail) || 'Transaction looks completely normal based on historical patterns.'}
+                  </div>
                 </div>
               </div>
             </div>

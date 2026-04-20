@@ -31,24 +31,7 @@ export default function Header({ trustScore = 0, isConnected = false, alertCount
         borderColor: 'var(--color-border)',
       }}
     >
-      <div className="flex items-center justify-between gap-4 max-w-7xl mx-auto">
-        <div className="flex items-center gap-3">
-          <div
-            className="w-9 h-9 rounded-lg flex items-center justify-center text-white font-bold text-sm"
-            style={{ backgroundColor: 'var(--color-primary)' }}
-          >
-            TL
-          </div>
-          <div className="hidden sm:block">
-            <p className="text-sm font-semibold" style={{ color: 'var(--color-text)' }}>
-              TrustLens
-            </p>
-            <p className="text-xs" style={{ color: 'var(--color-text-light)' }}>
-              Explainable AI Banking
-            </p>
-          </div>
-        </div>
-
+      <div className="flex w-full items-center justify-end gap-3">
         <div className="flex items-center gap-3">
           <div
             className={`hidden sm:flex items-center gap-2 px-3 py-2 rounded-lg border ${

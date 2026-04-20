@@ -54,6 +54,7 @@ export const transactionAPI = {
     return api.get('/transactions/stats');
   },
   getFraudLog: (transactionId) => api.get(`/transactions/fraud-log/${transactionId}`),
+  approve: (transactionId) => api.put(`/transactions/${transactionId}/approve`),
 };
 
 export const trustAPI = {

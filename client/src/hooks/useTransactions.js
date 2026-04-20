@@ -18,6 +18,13 @@ export const useTransactions = ({ page = 1, limit = 10, userId, withStats = true
 
   useEffect(() => {
     fetchTransactions();
+
+    const handleUpdate = () => {
+      fetchTransactions();
+    };
+
+    window.addEventListener('transactionsUpdated', handleUpdate);
+    return () => window.removeEventListener('transactionsUpdated', handleUpdate);
   }, [page, limit, userId, withStats]);
 
   const fetchTransactions = async () => {

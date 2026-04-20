@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   AlertTriangle,
   Clock,
@@ -8,6 +8,8 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 import RiskFactorCard from './RiskFactorCard';
+import { transactionAPI } from '../utils/api';
+import useTrust from '../hooks/useTrust';
 
 const formatAmount = (amt) =>
   new Intl.NumberFormat('en-IN', {
@@ -99,7 +101,26 @@ const buildRiskFactors = (transaction) => {
 };
 
 export default function TransactionDetailModal({ transaction, onClose }) {
+  const { refetch: refetchTrust } = useTrust();
+  const [isApproving, setIsApproving] = useState(false);
+
   if (!transaction) return null;
+
+  const handleApprove = async () => {
+    try {
+      setIsApproving(true);
+      await transactionAPI.approve(transaction._id || transaction.id);
+      refetchTrust();
+      window.dispatchEvent(new Event('transactionsUpdated'));
+      onClose();
+    } catch (error) {
+      console.error('Failed to approve transaction', error);
+    } finally {
+      setIsApproving(false);
+    }
+  };
+
+  const isActionable = !transaction?.humanReadable && transaction?.status !== 'completed' && transaction?.decision !== 'APPROVE' && (transaction?.isFlagged || transaction?.decision === 'DECLINE' || transaction?.decision === 'CHALLENGE' || transaction?.status === 'flagged' || transaction?.status === 'declined');
 
   const summary =
     transaction?.summary ||
@@ -136,13 +157,29 @@ export default function TransactionDetailModal({ transaction, onClose }) {
               Review the AI decision and underlying factors.
             </p>
           </div>
-          <button
-            onClick={onClose}
-            className="px-3 py-1 rounded-lg border text-sm"
-            style={{ borderColor: 'var(--color-border)', color: 'var(--color-text)' }}
-          >
-            Close
-          </button>
+          <div className="flex items-center gap-2">
+            {isActionable && (
+              <button
+                onClick={handleApprove}
+                disabled={isApproving}
+                className="px-3 py-1 rounded-lg text-sm font-semibold flex items-center transition-colors"
+                style={{ 
+                  backgroundColor: 'var(--color-success)', 
+                  color: 'white',
+                  opacity: isApproving ? 0.7 : 1
+                }}
+              >
+                {isApproving ? 'Approving...' : 'Allow Payment'}
+              </button>
+            )}
+            <button
+              onClick={onClose}
+              className="px-3 py-1 rounded-lg border text-sm hover:bg-slate-50 transition-colors"
+              style={{ borderColor: 'var(--color-border)', color: 'var(--color-text)' }}
+            >
+              Close
+            </button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">

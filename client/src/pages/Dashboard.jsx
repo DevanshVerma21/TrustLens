@@ -110,18 +110,19 @@ export default function Dashboard({ user }) {
             <h3 className="font-semibold mb-4" style={{ color: 'var(--color-text)' }}>
               30-Day Score Trend
             </h3>
-            <ResponsiveContainer width="100%" height={220}>
-              <LineChart data={chartData} margin={{ top: 8, right: 12, left: -10, bottom: 16 }}>
+            <ResponsiveContainer width="100%" height={260}>
+              <LineChart data={chartData} margin={{ top: 10, right: 20, left: 20, bottom: 35 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
                 <XAxis dataKey="date" tick={{ fontSize: 12 }}>
-                  <Label value="Date" position="insideBottom" offset={-10} />
+                  <Label value="Date" position="insideBottom" offset={-20} style={{ fill: 'var(--color-text-muted)' }} />
                 </XAxis>
                 <YAxis domain={[0, 100]} tick={{ fontSize: 12 }}>
                   <Label
                     value="Trust Score"
                     angle={-90}
                     position="insideLeft"
-                    offset={10}
+                    offset={-10}
+                    style={{ textAnchor: 'middle', fill: 'var(--color-text-muted)' }}
                   />
                 </YAxis>
                 <Tooltip
@@ -130,7 +131,7 @@ export default function Dashboard({ user }) {
                     border: '1px solid var(--color-border)',
                   }}
                 />
-                <Legend />
+                <Legend wrapperStyle={{ paddingTop: '20px' }} />
                 <Line
                   type="monotone"
                   dataKey="score"
