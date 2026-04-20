@@ -1,43 +1,27 @@
-services:
   # ----------------------------------------
-  # 1. Backend Web Service (Node.js/Express)
+  # 3. Keep-Alive Cron Job (every 10 minutes)
+  #    Pings the backend so Render free-tier
+  #    never spins the server down.
   # ----------------------------------------
-  - type: web
-    name: trustlens-api
+  - type: cron
+    name: trustlens-keep-alive
     env: node
-    rootDir: server # Run all commands inside the /server directory
-    buildCommand: npm install
-    startCommand: npm start
+    # Cron schedule: every 10 minutes, 24/7
+    schedule: "*/10 * * * *"
+    # Simple one-liner – no extra files needed
+    buildCommand: "true"
+    startCommand: >
+      node -e "
+        const https = require('https');
+        const url = process.env.BACKEND_URL || 'https://trustlens-api.onrender.com/health';
+        https.get(url, (res) => {
+          console.log('[keep-alive]', new Date().toISOString(), 'status:', res.statusCode);
+        }).on('error', (e) => {
+          console.error('[keep-alive] Error:', e.message);
+          process.exit(1);
+        });
+      "
     envVars:
-      - key: NODE_ENV
-        value: production
-      # Don't forget to add your MongoDB URI in the Render dashboard!
-      - key: MONGO_URI
-        sync: false 
-      # Add any other required environment variables here (e.g., JWT_SECRET)
-      - key: JWT_SECRET
-        sync: false
-
-  # ----------------------------------------
-  # 2. Frontend Static Site (React/Vite)
-  # ----------------------------------------
-  - type: web
-    name: trustlens-frontend
-    env: static
-    rootDir: client # Run all commands inside the /client directory
-    buildCommand: npm install && npm run build
-    staticPublishPath: dist # Vite builds to the "dist" folder
-    envVars:
-      - key: NODE_ENV
-        value: production
-      # This links the frontend to the backend service we created above
-      - key: VITE_API_BASE_URL
-        fromService:
-          type: web
-          name: trustlens-api
-          envVarKey: RENDER_EXTERNAL_URL
-    # Required for React Router (Single Page Application)
-    routes:
-      - type: rewrite
-        source: /*
-        destination: /index.html
+      # Replace the default value with your actual Render backend URL
+      - key: BACKEND_URL
+        value: https://trustlens-api.onrender.com/health
