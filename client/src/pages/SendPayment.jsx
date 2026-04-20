@@ -14,16 +14,12 @@ export default function SendPayment({ user }) {
     const ua = navigator.userAgent;
     if (ua.includes("iPhone")) return "iPhone";
     if (ua.includes("iPad")) return "iPad";
-    if (ua.includes("Android")) {
-      const match = ua.match(/Android[^;]*;\s*([^)]+)\)/);
-      return match ? match[1].trim() : "Android Device";
-    }
+    if (ua.includes("Android")) return "Android";
     if (ua.includes("Windows")) return "Windows PC";
     if (ua.includes("Mac")) return "Mac";
     if (ua.includes("Linux")) return "Linux PC";
     return "Unknown Device";
   };
-
 
   const [formData, setFormData] = useState({
     amount: '',
@@ -62,10 +58,10 @@ export default function SendPayment({ user }) {
 
       if (response && response.transaction) {
         setResult({
-           ...response,
-           transactionId: response.transaction,
-           status: response.decision === 'Approve' ? 'Approved' : response.decision,
-           trustScoreImpact: (response.trustLevel === 'Low' || response.riskLevel === 'High') ? -10 : 5 // Just a sample mapping for visuals
+          ...response,
+          transactionId: response.transaction,
+          status: response.decision === 'Approve' ? 'Approved' : response.decision,
+          trustScoreImpact: (response.trustLevel === 'Low' || response.riskLevel === 'High') ? -10 : 5 // Just a sample mapping for visuals
         });
         // Instantly refresh the trust score because it changed!
         refetchTrust();
@@ -88,17 +84,17 @@ export default function SendPayment({ user }) {
 
   const resultTheme = isRiskResult
     ? {
-        surface: 'rgba(239, 68, 68, 0.14)',
-        border: 'rgba(239, 68, 68, 0.45)',
-        heading: 'var(--color-danger)',
-        panel: 'rgba(239, 68, 68, 0.1)',
-      }
+      surface: 'rgba(239, 68, 68, 0.14)',
+      border: 'rgba(239, 68, 68, 0.45)',
+      heading: 'var(--color-danger)',
+      panel: 'rgba(239, 68, 68, 0.1)',
+    }
     : {
-        surface: 'rgba(16, 185, 129, 0.14)',
-        border: 'rgba(16, 185, 129, 0.45)',
-        heading: 'var(--color-success)',
-        panel: 'rgba(16, 185, 129, 0.1)',
-      };
+      surface: 'rgba(16, 185, 129, 0.14)',
+      border: 'rgba(16, 185, 129, 0.45)',
+      heading: 'var(--color-success)',
+      panel: 'rgba(16, 185, 129, 0.1)',
+    };
 
   return (
     <div className="space-y-6">
@@ -226,11 +222,11 @@ export default function SendPayment({ user }) {
           )}
 
           {loading && (
-             <div className="text-center text-blue-600 animate-pulse">
-               <Crosshair className="w-12 h-12 mx-auto mb-4 animate-spin" />
-               <p className="font-medium text-lg">TrustLens is intervening...</p>
-               <p className="text-sm text-slate-500 mt-2">Checking heuristics, IP, and history patterns...</p>
-             </div>
+            <div className="text-center text-blue-600 animate-pulse">
+              <Crosshair className="w-12 h-12 mx-auto mb-4 animate-spin" />
+              <p className="font-medium text-lg">TrustLens is intervening...</p>
+              <p className="text-sm text-slate-500 mt-2">Checking heuristics, IP, and history patterns...</p>
+            </div>
           )}
 
           {result && !loading && !result.error && (
