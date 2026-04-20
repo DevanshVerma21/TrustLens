@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import {
   AlertTriangle,
   Clock,
@@ -138,7 +139,7 @@ export default function TransactionDetailModal({ transaction, onClose }) {
   const recommendation = getDecisionMeta(transaction);
   const factors = buildRiskFactors(transaction);
 
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50"
       onClick={onClose}
@@ -310,6 +311,7 @@ export default function TransactionDetailModal({ transaction, onClose }) {
           </blockquote>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
