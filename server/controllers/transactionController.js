@@ -1,9 +1,11 @@
 import Transaction from '../models/Transaction.js';
 import User from '../models/User.js';
 import FraudLog from '../models/FraudLog.js';
+import AuditLog from '../models/AuditLog.js';
 import { FraudService } from '../services/fraudService.js';
 import { ExplainabilityService } from '../services/explainabilityService.js';
 import { TrustScoreService } from '../services/trustScoreService.js';
+import DecisionEngine from '../services/decisionEngine.js';
 
 const fraudService = new FraudService(User, Transaction);
 const explainabilityService = new ExplainabilityService();
@@ -53,13 +55,20 @@ export const submitTransaction = async (req, res) => {
       { averageAmount }
     );
 
-    const summary = explainabilityService.generateSummary(fraudAnalysis.score, explanations);
+    const summary = explainabilityService.generateSummary(fraudAnalysis.fraudScore, explanations, fraudAnalysis);
 
     // Determine if transaction should be flagged
-    const isFlagged = fraudAnalysis.score > 0.6;
+    const isFlagged = fraudAnalysis.fraudScore > 0.6;
     const status = isFlagged ? 'flagged' : 'completed';
 
-    // Create transaction record
+    // Use DecisionEngine to make production-grade decision
+    const decisionResult = await DecisionEngine.makeDecision(
+      { amount, location, deviceId, deviceName, timestamp: new Date(), category },
+      fraudAnalysis,
+      user
+    );
+
+    // Create transaction record with decision data
     const transaction = new Transaction({
       userId,
       amount,
@@ -67,11 +76,19 @@ export const submitTransaction = async (req, res) => {
       deviceId,
       deviceName,
       category,
-      fraudScore: fraudAnalysis.score,
+      fraudScore: fraudAnalysis.fraudScore,
       isFlagged,
       explanations,
       status,
-      trustScoreImpact: isFlagged ? -5 : 0,
+      decision: decisionResult.decisionName,
+      riskLevel: decisionResult.riskLevel,
+      trustLevel: decisionResult.trustLevel,
+      systemMessage: decisionResult.systemMessage,
+      reasoning: decisionResult.reasoning,
+      trustScoreImpact: DecisionEngine.calculateTrustImpact(
+        decisionResult.decisionName,
+        fraudAnalysis.fraudScore
+      ),
     });
 
     await transaction.save();
@@ -120,7 +137,7 @@ export const submitTransaction = async (req, res) => {
     const fraudLog = new FraudLog({
       transactionId: transaction._id,
       userId,
-      fraudScore: fraudAnalysis.score,
+      fraudScore: fraudAnalysis.fraudScore,
       aiReasons: explanations,
       riskFactors: {
         amountAnomaly: { detected: fraudAnalysis.riskFactors.amountRisk > 0.5, reason: 'Amount deviation detected' },
@@ -134,15 +151,74 @@ export const submitTransaction = async (req, res) => {
 
     await fraudLog.save();
 
+    // Create audit log for complete audit trail
+    const auditLog = new AuditLog({
+      transactionId: transaction._id,
+      userId,
+      decision: decisionResult.decisionName,
+      riskLevel: decisionResult.riskLevel,
+      trustLevel: decisionResult.trustLevel,
+      fraudScore: fraudAnalysis.fraudScore,
+      trustScore: user.trustScore,
+      confidence: decisionResult.confidence,
+      systemMessage: decisionResult.systemMessage,
+      reasoning: decisionResult.reasoning,
+      transactionDetails: {
+        amount,
+        location,
+        timestamp: new Date(),
+        category,
+        deviceName,
+        deviceId,
+      },
+      userContext: {
+        accountAge: user.behavioralProfile?.accountAge || 0,
+        accountStatus: user.accountStatus,
+        fraudHistoryCount: user.behavioralProfile?.fraudFlagCount || 0,
+        historicalFlagRate: user.behavioralProfile?.fraudFlagRate || 0,
+        behavioralProfile: {
+          typicalAmountMean: user.behavioralProfile?.amountStats?.mean || 0,
+          typicalAmountStdDev: user.behavioralProfile?.amountStats?.stdDev || 0,
+          primaryLocations: user.behavioralProfile?.primaryLocations || [],
+        },
+      },
+      decisionEngine: {
+        version: decisionResult.decisionEngineVersion,
+        model: decisionResult.model,
+        updatedAt: decisionResult.timestamp,
+      },
+      action: {
+        taken: decisionResult.decisionName === 'APPROVE' ? 'APPROVED' :
+               decisionResult.decisionName === 'CHALLENGE' ? 'CHALLENGED' :       
+               decisionResult.decisionName === 'DECLINE' ? 'DECLINED' :
+               decisionResult.decisionName === 'ESCALATE' ? 'ESCALATED' : 'HELD', 
+        approvalTime: new Date(),
+        manualReview: ['ESCALATE', 'CHALLENGE'].includes(decisionResult.decisionName),
+      },
+    });
+
+    await auditLog.save();
+
+    // Associate audit log with transaction
+    transaction.auditLogId = auditLog._id;
+    await transaction.save();
+
     return res.json({
       transaction: transaction._id,
+      decision: decisionResult.decisionName,
+      riskLevel: decisionResult.riskLevel,
+      trustLevel: decisionResult.trustLevel,
+      fraudScore: decisionResult.fraudScore.toFixed(3),
+      confidence: decisionResult.confidence.toFixed(2),
+      systemMessage: decisionResult.systemMessage,
       status,
-      fraudScore: fraudAnalysis.score.toFixed(3),
       isFlagged,
       summary,
       explanations,
+      reasoning: decisionResult.reasoning,
+      canAppeal: decisionResult.canAppeal,
+      auditLogId: auditLog._id,
       trustScore: user.trustScore,
-      riskLevel: user.riskLevel,
     });
   } catch (error) {
     console.error('Transaction submission error:', error);

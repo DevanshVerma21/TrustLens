@@ -30,7 +30,7 @@ const transactionSchema = new mongoose.Schema(
     },
     category: {
       type: String,
-      enum: ['shopping', 'dining', 'utilities', 'entertainment', 'transfer', 'withdrawal'],
+      enum: ['shopping', 'dining', 'utilities', 'entertainment', 'transfer', 'withdrawal', 'food', 'transport', 'bills'],
       default: 'shopping',
     },
     fraudScore: {
@@ -43,11 +43,58 @@ const transactionSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
-    explanations: [String],
+    explanations: [mongoose.Schema.Types.Mixed],
     status: {
       type: String,
-      enum: ['pending', 'completed', 'flagged', 'declined'],
+      enum: ['pending', 'completed', 'flagged', 'declined', 'appealed'],
       default: 'pending',
+    },
+
+    // Production fintech decision fields
+    decision: {
+      type: String,
+      enum: ['APPROVE', 'CHALLENGE', 'DECLINE', 'ESCALATE', 'HOLD'],
+      default: 'APPROVE',
+    },
+    riskLevel: {
+      type: String,
+      enum: ['LOW', 'MEDIUM', 'HIGH'],
+      default: 'MEDIUM',
+    },
+    trustLevel: {
+      type: String,
+      enum: ['TRUSTED', 'MODERATE_RISK', 'HIGH_RISK'],
+    },
+
+    // System message (user-facing)
+    systemMessage: String,
+
+    // Decision reasoning
+    reasoning: {
+      fraudReason: String,
+      trustReason: String,
+      decisionFactors: [String],
+    },
+
+    // Appeal information
+    appeal: {
+      appealed: {
+        type: Boolean,
+        default: false,
+      },
+      appealReason: String,
+      status: {
+        type: String,
+        enum: ['PENDING', 'APPROVED', 'REJECTED'],
+      },
+      submittedAt: Date,
+      reviewedAt: Date,
+    },
+
+    // Audit log reference
+    auditLogId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'AuditLog',
     },
     trustScoreImpact: {
       type: Number,

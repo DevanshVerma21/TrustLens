@@ -67,7 +67,7 @@ const FraudAlertPanel = ({ alert = null, onDismiss }) => {
                 <p className="text-xs font-semibold text-gray-600 uppercase">Risk Factors:</p>
                 {alert.explanations.map((reason, idx) => (
                   <p key={idx} className="text-sm text-gray-700">
-                    • {reason}
+                    • {typeof reason === 'string' ? reason : reason.detail || reason.factor || 'Suspicious activity'}
                   </p>
                 ))}
               </div>

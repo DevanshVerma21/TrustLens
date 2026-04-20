@@ -1,4 +1,5 @@
 export default {
+  darkMode: 'class',
   content: [
     './index.html',
     './src/**/*.{js,jsx,ts,tsx}',
@@ -29,12 +30,16 @@ export default {
         'clay-md': '-5px -5px 12px rgba(255, 255, 255, 0.7), 5px 5px 12px rgba(0, 0, 0, 0.1)',
         'clay-lg': '-8px -8px 20px rgba(255, 255, 255, 0.8), 8px 8px 20px rgba(0, 0, 0, 0.15)',
         'clay-inset': 'inset -2px -2px 5px rgba(255, 255, 255, 0.7), inset 2px 2px 5px rgba(0, 0, 0, 0.1)',
+        'dark-sm': '-2px -2px 5px rgba(255, 255, 255, 0.05), 2px 2px 5px rgba(0, 0, 0, 0.3)',
+        'dark-md': '-5px -5px 12px rgba(255, 255, 255, 0.05), 5px 5px 12px rgba(0, 0, 0, 0.3)',
+        'dark-lg': '-8px -8px 20px rgba(255, 255, 255, 0.05), 8px 8px 20px rgba(0, 0, 0, 0.4)',
       },
       backgroundImage: {
         'gradient-clay': 'linear-gradient(135deg, #f5f3f0 0%, #ede8e2 100%)',
         'gradient-trust-high': 'linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%)',
         'gradient-trust-medium': 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)',
         'gradient-trust-low': 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)',
+        'gradient-dark': 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
       },
     },
   },

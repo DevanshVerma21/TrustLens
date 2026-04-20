@@ -62,14 +62,16 @@ const ExplanationBox = ({ transaction = null, loading = false }) => {
         <h4 className="font-semibold text-gray-800 mb-3">🔍 Key Findings:</h4>
         <div className="space-y-2">
           {transaction.explanations?.length > 0 ? (
-            transaction.explanations.map((explanation, idx) => (
+            transaction.explanations.map((explanation, idx) => {
+              const expText = typeof explanation === 'string' ? explanation : explanation.detail || explanation.factor || 'Suspicious activity';
+              return (
               <div key={idx} className="flex gap-3 text-sm">
                 <span className="text-lg flex-shrink-0">
-                  {explanation.includes('High') ? '📈' : explanation.includes('Location') ? '📍' : explanation.includes('Time') ? '⏰' : explanation.includes('Device') ? '📱' : '⚡'}
+                  {expText.includes('High') ? '📈' : expText.includes('Location') ? '📍' : expText.includes('Time') ? '⏱' : expText.includes('Device') ? '📱' : '⚡'}
                 </span>
-                <p className="text-gray-700">{explanation}</p>
+                <p className="text-gray-700">{expText}</p>
               </div>
-            ))
+            )})
           ) : (
             <p className="text-gray-600 text-sm">✅ No suspicious patterns detected</p>
           )}

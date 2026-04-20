@@ -30,9 +30,9 @@ const TrustScoreCard = ({ trustScore = 85, riskLevel = 'low' }) => {
   };
 
   return (
-    <div className="clay-card">
+    <div className="card-lg p-8">
       <div className="flex flex-col items-center gap-6">
-        <h2 className="text-2xl font-bold text-gray-800">Trust Score</h2>
+        <h2 className="text-2xl font-bold text-white">Trust Score</h2>
 
         {/* Circular Score Display */}
         <div className="relative w-56 h-56 flex items-center justify-center">
@@ -43,7 +43,7 @@ const TrustScoreCard = ({ trustScore = 85, riskLevel = 'low' }) => {
               cy="100"
               r="95"
               fill="none"
-              stroke="#e5e7eb"
+              stroke="#374151"
               strokeWidth="8"
             />
             {/* Animated progress ring */}
@@ -65,14 +65,14 @@ const TrustScoreCard = ({ trustScore = 85, riskLevel = 'low' }) => {
             <div className="text-5xl font-bold" style={{ color: getRiskColor() }}>
               {trustScore}
             </div>
-            <div className="text-sm text-gray-500 mt-2">/100</div>
+            <div className="text-sm text-slate-400 mt-2">/100</div>
           </div>
         </div>
 
         {/* Risk indicator */}
         <div className="text-center">
-          <p className="text-xl font-semibold mb-2">{getRiskLabel()}</p>
-          <p className="text-sm text-gray-600">
+          <p className="text-xl font-semibold mb-2" style={{ color: getRiskColor() }}>{getRiskLabel()}</p>
+          <p className="text-sm text-slate-400">
             {trustScore >= 75
               ? 'Your account shows normal behavior patterns'
               : trustScore >= 50
@@ -82,8 +82,8 @@ const TrustScoreCard = ({ trustScore = 85, riskLevel = 'low' }) => {
         </div>
 
         {/* Status badge */}
-        <div className="mt-4 px-6 py-2 rounded-full bg-gradient-to-r from-gray-100 to-gray-50 border border-gray-200">
-          <span className="text-sm font-medium text-gray-700">Status: Active</span>
+        <div className="badge badge-success">
+          <span className="text-sm font-medium">Status: Active</span>
         </div>
       </div>
     </div>

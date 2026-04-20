@@ -7,7 +7,8 @@
   "scripts": {
     "dev": "nodemon server.js",
     "start": "node server.js",
-    "seed": "node utils/seed.js"
+    "seed": "node utils/seed.js",
+    "seed:synthetic": "node scripts/seed-synthetic-data.js"
   },
   "dependencies": {
     "express": "^4.18.2",
@@ -18,6 +19,8 @@
     "jsonwebtoken": "^9.0.0",
     "bcryptjs": "^2.4.3",
     "joi": "^17.9.1",
+    "express-validator": "^7.0.0",
+    "express-rate-limit": "^7.1.1",
     "axios": "^1.3.4"
   },
   "devDependencies": {

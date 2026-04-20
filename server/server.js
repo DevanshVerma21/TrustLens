@@ -9,14 +9,24 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 // Import routes
+import authRoutes from './routes/auth.js';
 import transactionRoutes from './routes/transactions.js';
+import trustRoutes from './routes/trust.js';
+import alertsRoutes from './routes/alerts.js';
+import dataRoutes from './routes/data.js';
+import auditRoutes from './routes/audit.js';
+import demoRoutes from './routes/demo.js';
+
+// Import middleware
+import { errorHandler } from './middleware/errorHandler.js';
+import { generalLimiter } from './middleware/rateLimiter.js';
 
 const app = express();
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: {
     origin: process.env.CLIENT_URL || 'http://localhost:5173',
-    methods: ['GET', 'POST'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
   },
 });
 
@@ -26,6 +36,7 @@ const io = new Server(httpServer, {
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(generalLimiter);
 
 /**
  * MongoDB Connection
@@ -78,7 +89,13 @@ app.use((req, res, next) => {
 /**
  * Routes
  */
+app.use('/api/auth', authRoutes);
 app.use('/api/transactions', transactionRoutes);
+app.use('/api/trust', trustRoutes);
+app.use('/api/alerts', alertsRoutes);
+app.use('/api/data', dataRoutes);
+app.use('/api/audit-logs', auditRoutes);
+app.use('/api/demo', demoRoutes);
 
 /**
  * Health Check
@@ -92,6 +109,43 @@ app.get('/api/health', (req, res) => {
 });
 
 /**
+ * Initialize Demo Data (One-time on startup)
+ */
+const initializeDemoData = async () => {
+  try {
+    const User = (await import('./models/User.js')).default;
+    const Transaction = (await import('./models/Transaction.js')).default;
+
+    // Check if we already have demo data
+    const existingUser = await User.findById('69dccbb4cf6b05ddf9b96846');
+
+    if (!existingUser || existingUser.behavioralProfile?.totalTransactions === 0) {
+      console.log('🚀 Preloading demo data for first-time startup...');
+
+      // Create demo user if doesn't exist
+      if (!existingUser) {
+        await User.create({
+          _id: '69dccbb4cf6b05ddf9b96846',
+          email: 'demo@trustlens.com',
+            passwordHash: 'demo_hash_ignored',
+        });
+      }
+
+      console.log('✅ Demo data initialization ready');
+    } else {
+      console.log('✅ Demo data already loaded');
+    }
+  } catch (error) {
+    console.warn('⚠️ Could not auto-initialize demo data:', error.message);
+  }
+};
+
+// Initialize after DB connection
+setTimeout(() => {
+  initializeDemoData().catch(err => console.error('Init error:', err));
+}, 1000);
+
+/**
  * Welcome Route
  */
 app.get('/', (req, res) => {
@@ -103,18 +157,19 @@ app.get('/', (req, res) => {
       getUserTransactions: 'GET /api/transactions/user/:userId',
       getTrustScore: 'GET /api/transactions/trust-score/:userId',
       getFraudLog: 'GET /api/transactions/fraud-log/:transactionId',
+      generateSyntheticData: 'POST /api/data/generate',
+      generateMultipleProfiles: 'POST /api/data/generate-multi',
+      clearSyntheticData: 'DELETE /api/data/:userId',
+      getDataStats: 'GET /api/data/stats/:userId',
       health: 'GET /api/health',
     },
   });
 });
 
 /**
- * Error Handling
+ * Error Handling (Must be last)
  */
-app.use((err, req, res, next) => {
-  console.error('🔴 Error:', err);
-  res.status(500).json({ error: err.message || 'Internal Server Error' });
-});
+app.use(errorHandler);
 
 /**
  * Start Server

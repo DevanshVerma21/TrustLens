@@ -16,7 +16,7 @@ const fraudLogSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
-    aiReasons: [String],
+    aiReasons: [mongoose.Schema.Types.Mixed],
     riskFactors: {
       amountAnomaly: {
         detected: Boolean,
