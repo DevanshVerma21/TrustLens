@@ -31,14 +31,42 @@ export default function Dashboard({ user }) {
 
   const [selectedTransaction, setSelectedTransaction] = useState(null);
 
-  const chartData = useMemo(
-    () =>
-      (history || []).slice(-30).map((item) => ({
-        date: new Date(item.date).toLocaleDateString('en-IN', { month: 'short', day: 'numeric' }),
-        score: item.score,
-      })),
-    [history]
-  );
+  const { chartData, xAxisTicks } = useMemo(() => {
+    if (!history || history.length === 0) {
+      return { chartData: [], xAxisTicks: [] };
+    }
+
+    // The backend provides a 30-day array. We find the FIRST day that actually has a score.
+    const firstValidIndex = history.findIndex(h => h.score !== null);
+
+    if (firstValidIndex === -1) {
+      // No recorded transactions at all
+      return { chartData: [], xAxisTicks: [] };
+    }
+
+    // Slice from the earliest recorded transaction up to today
+    const relevantHistory = history.slice(firstValidIndex);
+
+    const data = relevantHistory.map(h => {
+      const d = new Date(h.date);
+      return {
+        fullDate: d,
+        date: d.toLocaleDateString('en-IN', { month: 'short', day: 'numeric' }),
+        score: h.score,
+      };
+    });
+
+    // Maintain a 3-day gap for X-Axis labels, starting from the oldest date in relevant history
+    const ticks = [];
+    for (let i = 0; i < data.length; i += 3) {
+      ticks.push(data[i].date);
+    }
+    // Make sure the last date (today) is shown if it's not already in there, 
+    // but the instruction says "maintain the 3 days gap as it did". 
+    // Just pulling every 3rd item from the left ensures the left-most date is always listed.
+
+    return { chartData: data, xAxisTicks: ticks };
+  }, [history]);
 
   const statsSummary = {
     total: stats?.totalTransactions ?? stats?.total ?? 0,
@@ -113,7 +141,7 @@ export default function Dashboard({ user }) {
             <ResponsiveContainer width="100%" height={260}>
               <LineChart data={chartData} margin={{ top: 10, right: 20, left: 20, bottom: 35 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
-                <XAxis dataKey="date" tick={{ fontSize: 12 }}>
+                <XAxis dataKey="date" ticks={xAxisTicks} interval={0} tick={{ fontSize: 12 }}>
                   <Label value="Date" position="insideBottom" offset={-20} style={{ fill: 'var(--color-text-muted)' }} />
                 </XAxis>
                 <YAxis domain={[0, 100]} tick={{ fontSize: 12 }}>
@@ -138,7 +166,8 @@ export default function Dashboard({ user }) {
                   name="Trust Score"
                   stroke="var(--color-primary)"
                   strokeWidth={2}
-                  dot={false}
+                  dot={chartData.length === 1 ? { r: 4, fill: 'var(--color-primary)' } : false}
+                  connectNulls={true}
                 />
               </LineChart>
             </ResponsiveContainer>
@@ -219,7 +248,8 @@ export default function Dashboard({ user }) {
                         key={txn._id || `${txn.timestamp}-${txn.amount}`}
                         transaction={txn}
                         onSelect={() => setSelectedTransaction(txn)}
-                        onExplain={() => setSelectedTransaction(txn)}
+                        actionLabel="Explain"
+                        onAction={() => setSelectedTransaction(txn)}
                       />
                     ))}
                   </tbody>

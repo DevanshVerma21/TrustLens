@@ -233,7 +233,8 @@ export default function Transactions({ user }) {
                 key={txn._id || `${txn.timestamp}-${txn.amount}`}
                 transaction={txn}
                 onSelect={() => setSelectedTransaction(txn)}
-                onExplain={() => setSelectedTransaction(txn)}
+                actionLabel="Explain"
+                onAction={() => setSelectedTransaction(txn)}
               />
             ))}
             {pagedTransactions.length === 0 && (

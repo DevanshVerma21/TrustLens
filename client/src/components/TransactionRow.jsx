@@ -13,8 +13,9 @@ import {
  */
 export default function TransactionRow({
   transaction = {},
-  onExplain = () => {},
+  onAction = () => {},
   onSelect = () => {},
+  actionLabel = 'Explain',
 }) {
   const {
     amount = 0,
@@ -112,16 +113,16 @@ export default function TransactionRow({
         <button
           onClick={(event) => {
             event.stopPropagation();
-            onExplain(transaction);
+            onAction(transaction);
           }}
           className="px-3 py-1 rounded-lg border text-xs font-semibold transition"
           style={{
-            borderColor: 'var(--color-primary)',
-            color: 'var(--color-primary)',
-            backgroundColor: 'transparent',
+            borderColor: actionLabel === 'Block Card' ? 'var(--color-danger)' : 'var(--color-primary)',
+            color: actionLabel === 'Block Card' ? 'white' : 'var(--color-primary)',
+            backgroundColor: actionLabel === 'Block Card' ? 'var(--color-danger)' : 'transparent',
           }}
         >
-          Explain
+          {actionLabel}
         </button>
       </td>
     </tr>

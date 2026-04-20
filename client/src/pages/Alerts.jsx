@@ -78,7 +78,14 @@ export default function Alerts({ user }) {
                   key={txn._id || `${txn.timestamp}-${txn.amount}`}
                   transaction={txn}
                   onSelect={() => setSelectedTransaction(txn)}
-                  onExplain={() => setSelectedTransaction(txn)}
+                  actionLabel="Block Card"
+                  onAction={(txn) => {
+                    const confirmBlock = window.confirm(`Are you sure you want to block your card due to this transaction at ${txn.merchant || 'this merchant'}?`);
+                    if (confirmBlock) {
+                      alert('Card blocked successfully. Please contact support to issue a replacement.');
+                      // Ideally call an endpoint to block the card here
+                    }
+                  }}
                 />
               ))}
             </tbody>

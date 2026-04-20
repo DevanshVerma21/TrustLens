@@ -3,6 +3,7 @@ import { authMiddleware } from '../middleware/auth.js';
 import User from '../models/User.js';
 import { TrustScoreService } from '../services/trustScoreService.js';
 import Transaction from '../models/Transaction.js';
+import AuditLog from '../models/AuditLog.js';
 
 const router = express.Router();
 const trustScoreService = new TrustScoreService(User, Transaction);
@@ -68,28 +69,64 @@ router.get('/history', authMiddleware, async (req, res, next) => {
       return res.status(404).json({ success: false, error: 'User not found' });
     }
 
-    // Get trust history (last 30 days)
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-    const history = (user.trustHistory || []).filter((h) => new Date(h.date) >= thirtyDaysAgo);
 
-    // If no history, generate a synthetic 30-day trend ending at current score
-    if (history.length === 0) {
-      let currentScore = user.trustScore || 60;
-      for (let i = 29; i >= 0; i--) {
-        const d = new Date();
-        d.setDate(d.getDate() - i);
-        // Add some random noise +-2 to previous day, bounded 0-100
-        const noise = Math.floor(Math.random() * 5) - 2;
-        // On the last day, strictly use the current score
-        let dayScore = i === 0 ? currentScore : currentScore - (i * 0.5) + noise; 
-        dayScore = Math.max(0, Math.min(100, Math.round(dayScore)));
+    // Fetch actual AuditLogs to get historical trust scores for the user
+    const auditLogs = await AuditLog.find({
+      userId: req.user.userId,
+      createdAt: { $gte: thirtyDaysAgo },
+    }).sort({ createdAt: 1 });
 
-        history.push({
-          date: d,
-          score: dayScore,
-          reason: i === 0 ? 'Current score' : 'Historical estimate',
-        });
+    const history = [];
+
+    // Always generate exactly 30 days to maintain the "3 days gap" layout on frontend X-axis
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const dateStr = d.toISOString().split('T')[0];
+      
+      history.push({
+        _dateStr: dateStr,
+        date: d,
+        score: null, // default empty
+        reason: 'No activity',
+      });
+    }
+
+    if (auditLogs.length > 0) {
+      const dailyScores = {};
+      auditLogs.forEach(log => {
+        const d = new Date(log.createdAt);
+        const dateStr = d.toISOString().split('T')[0];
+        dailyScores[dateStr] = log.trustScore;
+      });
+
+      // Fill real-time scores starting from the first recorded transaction
+      let lastKnownScore = null;
+      history.forEach(day => {
+        if (dailyScores[day._dateStr] !== undefined) {
+          lastKnownScore = dailyScores[day._dateStr];
+          day.score = lastKnownScore;
+          day.reason = 'Transaction processed';
+        } else if (lastKnownScore !== null) {
+          // Carry forward the score if there were no transactions on this day
+          day.score = lastKnownScore;
+          day.reason = 'Carried forward';
+        }
+      });
+      
+      // Ensure today's score ends accurately if missing from today's dailyScores
+      const todayStr = new Date().toISOString().split('T')[0];
+      const todayItem = history[history.length - 1];
+      if (todayItem._dateStr === todayStr && todayItem.score === null) {
+         if (lastKnownScore !== null) {
+             todayItem.score = user.trustScore;
+             todayItem.reason = 'Current score';
+         }
       }
+    } else {
+      // If user didn't have any transactions, return an empty array (chart empty)
+      return res.json({ success: true, data: { history: [] } });
     }
 
     res.json({
