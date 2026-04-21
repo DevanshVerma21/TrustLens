@@ -1,0 +1,24 @@
+name: Keep Render Alive
+
+on:
+  schedule:
+    # Runs every 10 minutes, 24/7
+    - cron: "*/10 * * * *"
+  workflow_dispatch: # Allow manual trigger from GitHub Actions tab
+
+jobs:
+  ping:
+    name: Ping Render Backend
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Ping backend /health endpoint
+        run: |
+          echo "⏰ $(date) — Pinging Render backend..."
+          STATUS=$(curl -o /dev/null -s -w "%{http_code}" https://trustlens-backend-a2a5.onrender.com/api/health)
+          echo "✅ Response status: $STATUS"
+          if [ "$STATUS" -lt 200 ] || [ "$STATUS" -ge 400 ]; then
+            echo "❌ Ping failed with status $STATUS"
+            exit 1
+          fi
+          echo "🟢 Server is awake!"
