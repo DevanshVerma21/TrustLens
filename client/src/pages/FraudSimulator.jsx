@@ -30,7 +30,7 @@ export default function FraudSimulator({ user }) {
         amount: formData.amount,
         location: formData.location,
         deviceId: `device-${formData.device}-${Date.now()}`,
-        deviceName: formData.device === 'known' ? 'iPhone 14' : 'Unknown Device',
+        deviceName: formData.device === 'known' ? 'Windows PC' : 'Unknown Device',
         category: formData.category,
       });
 

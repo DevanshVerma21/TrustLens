@@ -257,7 +257,7 @@ function LocationBreakdown() {
 
 function DeviceUsage() {
   const devices = [
-    { name: 'iPhone 14', percent: 65, icon: '📱' },
+    { name: 'Windows PC', percent: 65, icon: '🖥️' },
     { name: 'MacBook Pro', percent: 20, icon: '💻' },
     { name: 'iPad Air', percent: 10, icon: '📱' },
     { name: 'Other Devices', percent: 5, icon: '🖥️' },
@@ -433,7 +433,7 @@ export default function ProfileIntelligence() {
           <div className="p-4 bg-amber-50 rounded-lg border-l-4 border-amber-500">
             <p className="font-semibold text-amber-900 mb-1">📱 Device Consistency</p>
             <p className="text-sm text-amber-800">
-              Strong device loyalty with iPhone 14 being your primary device (65% of transactions).
+              Strong device loyalty with Windows PC being your primary device (65% of transactions).
             </p>
           </div>
         </div>

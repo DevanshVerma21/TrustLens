@@ -5,7 +5,7 @@ const TransactionForm = ({ onSubmit, loading = false }) => {
   const [formData, setFormData] = useState({
     amount: '',
     location: '',
-    deviceName: 'iPhone 14',
+    deviceName: 'Windows PC',
     category: 'shopping',
   });
 
@@ -27,7 +27,7 @@ const TransactionForm = ({ onSubmit, loading = false }) => {
     setFormData({
       amount: '',
       location: '',
-      deviceName: 'iPhone 14',
+      deviceName: 'Windows PC',
       category: 'shopping',
     });
   };
@@ -80,7 +80,7 @@ const TransactionForm = ({ onSubmit, loading = false }) => {
             onChange={handleChange}
             className="clay-input"
           >
-            <option value="iPhone 14">iPhone 14</option>
+            <option value="Windows PC">Windows PC</option>
             <option value="MacBook Pro">MacBook Pro</option>
             <option value="iPad Air">iPad Air</option>
             <option value="Samsung Galaxy S23">Samsung Galaxy S23</option>

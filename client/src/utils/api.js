@@ -3,7 +3,7 @@ import axios from 'axios';
 export const DEMO_USER_ID =
   import.meta.env.VITE_DEMO_USER_ID || '69dccbb4cf6b05ddf9b96846';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://trustlens-backend-a2a5.onrender.com/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -66,7 +66,11 @@ api.interceptors.response.use(
 );
 
 export const transactionAPI = {
+  analyze: (data) => api.post('/transactions/analyze', data),
   submit: (data) => api.post('/transactions', data),
+  resolveUpi: (upiId) => api.get(`/transactions/resolve-upi/${encodeURIComponent(upiId)}`),
+  getPayeeProfile: (userId) => api.get(`/transactions/payee-profile/${userId}`),
+  getWebsiteDatabase: () => api.get('/transactions/websites'),
   getTransactions: ({ userId, page = 1, limit = 10, isFlagged } = {}) => {
     const params = { limit, offset: (page - 1) * limit };
     if (isFlagged !== undefined) params.isFlagged = isFlagged;
