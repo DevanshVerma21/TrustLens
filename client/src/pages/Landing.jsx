@@ -1,15 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { ReactLenis } from '@studio-freight/react-lenis';
-import { 
-  ShieldCheck, 
-  ScanLine, 
-  BrainCircuit, 
-  Users, 
-  ArrowRight, 
-  CheckCircle2, 
+import {
+  ShieldCheck,
+  ScanLine,
+  BrainCircuit,
+  Users,
+  ArrowRight,
+  CheckCircle2,
   AlertTriangle,
-  Activity
+  Activity,
+  Lock,
+  Zap,
+  Globe,
+  Github,
+  Twitter,
+  Linkedin,
+  Mail,
+  BadgeCheck,
+  Shield,
+  BarChart3
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -26,8 +36,8 @@ const Header = () => (
     </div>
     <nav className="hidden md:flex gap-8 text-sm font-medium text-slate-300">
       <a href="#features" className="hover:text-white transition-colors">Features</a>
-      <a href="#how-it-works" className="hover:text-white transition-colors">How it Works</a>
-      <a href="#demo" className="hover:text-white transition-colors">Live Demo</a>
+      <Link to="/how-it-works" className="hover:text-white transition-colors">How it Works</Link>
+      <Link to="/about" className="hover:text-white transition-colors">About</Link>
     </nav>
     <Link to="/app" className="px-5 py-2 text-sm font-medium text-white bg-white/10 hover:bg-white/20 rounded-full backdrop-blur-md border border-white/10 transition-all">
       Open App
@@ -65,8 +75,7 @@ const Hero = () => {
           transition={{ duration: 0.8, delay: 1.6, ease: "easeOut" }}
           className="text-lg md:text-xl text-slate-400 max-w-2xl mb-10 leading-relaxed"
         >
-          TrustLens uses deterministic AI to instantly analyze UPI IDs, QR codes, and payees. 
-          Stop scams before they happen with real-time trust scoring and explainable risk factors.
+          TrustLens proactively prevents payment fraud by analyzing UPI IDs, QR codes, and payees in real time — delivering instant trust scores with clear, explainable risk signals.
         </motion.p>
 
         <motion.div 
@@ -75,9 +84,9 @@ const Hero = () => {
           transition={{ duration: 0.8, delay: 1.8, ease: "easeOut" }}
           className="flex flex-col sm:flex-row gap-4"
         >
-          <a href="#demo" className="flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white rounded-full font-semibold transition-all shadow-[0_0_40px_rgba(168,85,247,0.4)] hover:shadow-[0_0_60px_rgba(168,85,247,0.6)] hover:-translate-y-1">
-            Try Live Demo <ArrowRight className="w-5 h-5" />
-          </a>
+          <Link to="/app" className="flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white rounded-full font-semibold transition-all shadow-[0_0_40px_rgba(168,85,247,0.4)] hover:shadow-[0_0_60px_rgba(168,85,247,0.6)] hover:-translate-y-1">
+            Get Started Free <ArrowRight className="w-5 h-5" />
+          </Link>
           <Link to="/app" className="px-8 py-4 bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-full font-semibold backdrop-blur-md transition-all hover:-translate-y-1">
             Open Dashboard
           </Link>
@@ -250,8 +259,8 @@ const HowItWorks = () => {
   );
 };
 
-// --- Interactive Demo Section ---
-const DemoSection = () => {
+// --- Footer ---
+const REMOVED_DemoSection = () => {
   const [upi, setUpi] = useState('');
   const [analyzing, setAnalyzing] = useState(false);
   const [result, setResult] = useState(null);
@@ -357,21 +366,155 @@ const DemoSection = () => {
 };
 
 // --- Footer ---
+const footerLinks = {
+  Product: [
+    { label: 'Trust Score Engine', href: '#features' },
+    { label: 'QR Code Scanner', href: '#features' },
+    { label: 'Explainable AI', href: '#features' },
+    { label: 'Live Demo', href: '#demo' },
+  ],
+  Developers: [
+    { label: 'API Reference', href: '#' },
+    { label: 'Integration Guide', href: '#' },
+    { label: 'Webhook Events', href: '#' },
+    { label: 'SDKs', href: '#' },
+  ],
+  Company: [
+    { label: 'About', href: '#' },
+    { label: 'Blog', href: '#' },
+    { label: 'Privacy Policy', href: '#' },
+    { label: 'Terms of Service', href: '#' },
+  ],
+};
+
+const trustBadges = [
+  { icon: Lock, label: 'SOC 2 Type II' },
+  { icon: Shield, label: 'ISO 27001' },
+  { icon: BadgeCheck, label: 'PCI DSS' },
+  { icon: BarChart3, label: '99.9% Uptime' },
+];
+
+const socialLinks = [
+  { icon: Github, href: 'https://github.com/DevanshVerma21/TrustLens', label: 'GitHub' },
+  { icon: Twitter, href: '#', label: 'Twitter' },
+  { icon: Linkedin, href: '#', label: 'LinkedIn' },
+];
+
 const Footer = () => (
-  <footer className="border-t border-white/5 bg-slate-950 pt-16 pb-8 px-6">
-    <div className="max-w-7xl mx-auto grid md:grid-cols-4 gap-12 mb-16">
-      <div className="col-span-2">
-        <div className="flex items-center gap-2 mb-6">
-          <ShieldCheck className="w-6 h-6 text-purple-500" />
-          <span className="text-xl font-bold text-white">TrustLens</span>
+  <footer className="relative border-t border-white/5 bg-slate-950 overflow-hidden">
+    {/* Ambient glow */}
+    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-purple-600/8 blur-[120px] rounded-full pointer-events-none" />
+
+    {/* ── CTA Band ── */}
+    <div className="relative border-b border-white/5 py-16 px-6">
+      <div className="max-w-4xl mx-auto flex flex-col md:flex-row items-center justify-between gap-8">
+        <div>
+          <h3 className="text-2xl md:text-3xl font-bold text-white mb-2">
+            Ready to stop fraud before it happens?
+          </h3>
+          <p className="text-slate-400">
+            Join TrustLens and get AI-powered protection on every transaction.
+          </p>
         </div>
-        <p className="text-slate-400 max-w-sm">
-          Fostering trust in digital economies. Award-winning explainable AI for the modern financial stack.
-        </p>
+        <Link
+          to="/app"
+          className="shrink-0 flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white rounded-full font-semibold transition-all shadow-[0_0_30px_rgba(168,85,247,0.35)] hover:shadow-[0_0_50px_rgba(168,85,247,0.5)] hover:-translate-y-0.5"
+        >
+          Get Started Free <ArrowRight className="w-4 h-4" />
+        </Link>
       </div>
     </div>
-    <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between pt-8 border-t border-white/5 text-sm text-slate-500">
-      <p>© 2026 TrustLens.</p>
+
+
+    {/* ── Main Footer Grid ── */}
+    <div className="px-6 pt-14 pb-10">
+      <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-5 gap-10">
+        {/* Brand col */}
+        <div className="col-span-2">
+          <div className="flex items-center gap-2 mb-5">
+            <div className="p-1.5 bg-purple-500/15 rounded-lg ring-1 ring-purple-500/30">
+              <ShieldCheck className="w-5 h-5 text-purple-400" />
+            </div>
+            <span className="text-lg font-black text-white">TrustLens</span>
+          </div>
+          <p className="text-slate-400 text-sm leading-relaxed max-w-xs mb-6">
+            Explainable AI for the modern financial stack. Real-time fraud detection with full transparency on every decision.
+          </p>
+          {/* Social links */}
+          <div className="flex items-center gap-3">
+            {socialLinks.map(({ icon: Icon, href, label }) => (
+              <a
+                key={label}
+                href={href}
+                target="_blank"
+                rel="noreferrer"
+                aria-label={label}
+                className="w-9 h-9 flex items-center justify-center rounded-lg bg-white/4 hover:bg-white/8 border border-white/8 hover:border-purple-500/40 text-slate-400 hover:text-white transition-all"
+              >
+                <Icon className="w-4 h-4" />
+              </a>
+            ))}
+          </div>
+          {/* Newsletter */}
+          <div className="mt-6">
+            <p className="text-xs text-slate-500 mb-2 uppercase tracking-wider font-medium">Stay Updated</p>
+            <form
+              onSubmit={(e) => e.preventDefault()}
+              className="flex items-center gap-2"
+            >
+              <div className="flex-1 flex items-center gap-2 bg-white/4 border border-white/8 rounded-xl px-3 py-2">
+                <Mail className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                <input
+                  type="email"
+                  placeholder="your@email.com"
+                  className="bg-transparent text-xs text-white placeholder-slate-600 outline-none w-full"
+                />
+              </div>
+              <button
+                type="submit"
+                className="px-3 py-2 bg-purple-600/70 hover:bg-purple-500/80 text-white text-xs rounded-xl transition-colors font-medium"
+              >
+                Subscribe
+              </button>
+            </form>
+          </div>
+        </div>
+
+        {/* Link columns */}
+        {Object.entries(footerLinks).map(([category, links]) => (
+          <div key={category}>
+            <p className="text-white text-sm font-semibold mb-4">{category}</p>
+            <ul className="space-y-3">
+              {links.map(({ label, href }) => (
+                <li key={label}>
+                  <a
+                    href={href}
+                    className="text-slate-400 text-sm hover:text-white transition-colors"
+                  >
+                    {label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    {/* ── Bottom Bar ── */}
+    <div className="border-t border-white/5 px-6 py-5">
+      <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-600">
+        <p>© 2026 TrustLens Technologies. All rights reserved.</p>
+        <div className="flex items-center gap-1">
+          <Zap className="w-3 h-3 text-purple-500" />
+          <span>Built with Explainable AI for a safer digital economy</span>
+        </div>
+        <div className="flex gap-5">
+          <Link to="/privacy-policy" className="hover:text-slate-300 transition-colors">Privacy</Link>
+          <Link to="/terms" className="hover:text-slate-300 transition-colors">Terms</Link>
+          <Link to="/cookies" className="hover:text-slate-300 transition-colors">Cookies</Link>
+        </div>
+      </div>
     </div>
   </footer>
 );
@@ -411,7 +554,6 @@ export default function LandingPage() {
           <Hero />
           <Features />
           <HowItWorks />
-          <DemoSection />
         </main>
         <Footer />
       </div>

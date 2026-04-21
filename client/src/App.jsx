@@ -9,6 +9,11 @@ import SendPayment from './pages/SendPayment';
 import Alerts from './pages/Alerts';
 import Auth from './pages/Auth';
 import LandingPage from './pages/Landing';
+import AboutPage from './pages/AboutPage';
+import HowItWorksPage from './pages/HowItWorksPage';
+import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
+import TermsPage from './pages/TermsPage';
+import CookiesPage from './pages/CookiesPage';
 import useTrust from './hooks/useTrust';
 import useAlerts from './hooks/useAlerts';
 import { authAPI } from './utils/api';
@@ -62,8 +67,13 @@ function App() {
     <CardBlockProvider>
       <Router>
         <Routes>
-          {/* Public Landing Page */}
+          {/* Public Routes */}
           <Route path="/" element={<LandingPage />} />
+          <Route path="/about" element={<AboutPage />} />
+          <Route path="/how-it-works" element={<HowItWorksPage />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+          <Route path="/terms" element={<TermsPage />} />
+          <Route path="/cookies" element={<CookiesPage />} />
 
           {/* Protected App Routes */}
           <Route path="/app/*" element={
